@@ -8,5 +8,5 @@ export default {
   dbCredentials: {
     url: env.DATABASE_URL,
   },
-  tablesFilter: ['botfactory.io_*'],
+  tablesFilter: ['botfactory_*'],
 } satisfies Config;
