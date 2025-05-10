@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 
 import Header from '~/components/LandingPage/Header/Header';
@@ -17,15 +18,30 @@ export default async function Landing() {
 
   return (
     <HydrateClient>
-      <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c] pt-[68px] text-white">
-        <Header />
-        <section className="container flex flex-col items-center justify-between gap-12 px-4 py-16 [&>div]:scroll-m-25">
-          <h1>Создавайте мощные Telegram-боты без кода за минуты</h1>
-          <h2>
-            Бесплатный конструктор с drag-n-drop, расширенные фичи по подписке
-          </h2>
-          <Separator />
-          <div id="why-us">
+      <Header />
+      <main className="flex h-screen snap-y snap-mandatory flex-col overflow-x-hidden overflow-y-scroll font-mono text-white">
+        {/* Hero */}
+        <section className="landing__section-outer from-purple-500 to-purple-800">
+          <article className="landing__section-inner">
+            <h1>Создавайте мощные Telegram-боты без кода за минуты</h1>
+            <p className="text-white/75">
+              Бесплатный конструктор с drag-n-drop, расширенные фичи по подписке
+            </p>
+            <div className="relative h-[500px] w-full overflow-hidden rounded-lg shadow-lg">
+              <Image
+                src="/hero-image.jpg"
+                alt=""
+                fill
+                className="object-cover object-center"
+              />
+            </div>
+          </article>
+        </section>
+        {/* Hero */}
+        <Separator />
+        {/* Why */}
+        <section id="why-us" className="landing__section-outer bg-zinc-900">
+          <article className="landing__section-inner">
             <h2>Почему именно мы</h2>
             <ul>
               <li>
@@ -51,9 +67,16 @@ export default async function Landing() {
                 <p>Шаг-за-шаг инструкции и примеры готовых сценариев</p>
               </li>
             </ul>
-          </div>
-          <Separator />
-          <div id="how-it-works">
+          </article>
+        </section>
+        {/* Why */}
+        <Separator />
+        {/* How */}
+        <section
+          id="how-it-works"
+          className="landing__section-outer bg-gray-200 text-zinc-900"
+        >
+          <article className="landing__section-inner">
             <h2>Как это работает</h2>
             <ol>
               <li>Зарегистрируйтесь через Telegram</li>
@@ -61,16 +84,21 @@ export default async function Landing() {
               <li>Настройте логику – echo, кнопки, условия и внешние API</li>
               <li>Запустите и делитесь ссылкой на вашего помощника</li>
             </ol>
-          </div>
-          <Separator />
-          <div id="trust-us">
+          </article>
+        </section>
+        {/* How */}
+        <Separator />
+        {/* Trust */}
+        <section id="trust-us" className="landing__section-outer bg-zinc-900">
+          <article className="landing__section-inner">
             <h2>Доверьтесь профессионалам</h2>
             <p>
               Запускайте проекты быстро, без разработчиков и сложных настроек –
               начните уже сегодня!
             </p>
-          </div>
+          </article>
         </section>
+        {/* Trust */}
       </main>
     </HydrateClient>
   );
