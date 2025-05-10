@@ -1,14 +1,25 @@
+'use client';
+
 import Image from 'next/image';
+
+import { useLandingPageContext } from '~/context/LandingPageContext';
 
 type Props = {
   observerRef: (node?: Element | null) => void;
 };
 
 export default function LandingContent({ observerRef }: Props) {
+  const {
+    refs: { hero, how, trust, why },
+  } = useLandingPageContext();
+
   return (
     <main className="flex h-screen snap-y snap-mandatory flex-col overflow-x-hidden overflow-y-scroll font-mono text-white">
       {/* Hero */}
-      <section className="landing__section-outer relative from-purple-500 to-purple-800">
+      <section
+        className="landing__section-outer relative from-purple-500 to-purple-800"
+        ref={hero}
+      >
         <article className="landing__section-inner">
           <h1>Создавайте мощные Telegram-боты без кода за минуты</h1>
           <p className="text-white/75">
@@ -27,7 +38,11 @@ export default function LandingContent({ observerRef }: Props) {
       </section>
       {/* Hero */}
       {/* Why */}
-      <section id="why-us" className="landing__section-outer bg-zinc-900">
+      <section
+        id="why-us"
+        className="landing__section-outer bg-zinc-900"
+        ref={why}
+      >
         <article className="landing__section-inner">
           <h2>Почему именно мы</h2>
           <ul>
@@ -58,6 +73,7 @@ export default function LandingContent({ observerRef }: Props) {
       {/* Why */}
       {/* How */}
       <section
+        ref={how}
         id="how-it-works"
         className="landing__section-outer bg-gray-200 text-zinc-900"
       >
@@ -73,7 +89,11 @@ export default function LandingContent({ observerRef }: Props) {
       </section>
       {/* How */}
       {/* Trust */}
-      <section id="trust-us" className="landing__section-outer bg-zinc-900">
+      <section
+        id="trust-us"
+        className="landing__section-outer bg-zinc-900"
+        ref={trust}
+      >
         <article className="landing__section-inner">
           <h2>Доверьтесь профессионалам</h2>
           <p>
