@@ -11,12 +11,14 @@ import {
   useState,
 } from 'react';
 
+import useOnScreen from '~/hooks/use-on-screen';
+
 export type LandingPageSectionId = 'hero' | 'why' | 'how' | 'trust';
 
 type LandingPageContext = {
   activeSectionId: LandingPageSectionId;
   changeActiveSectionId: (sectionId: LandingPageSectionId) => void;
-  refs: Record<LandingPageSectionId, RefObject<HTMLDivElement | null> | null>;
+  refs: Record<LandingPageSectionId, RefObject<HTMLElement | null> | null>;
 };
 const LandingPageContext = createContext<LandingPageContext>({
   activeSectionId: 'hero',
@@ -30,10 +32,10 @@ export const useLandingPageContext = () => useContext(LandingPageContext);
 
 type Props = { children: ReactNode };
 export default function LandingPageContextProvider({ children }: Props) {
-  const heroRef = useRef<HTMLDivElement>(null);
-  const whyRef = useRef<HTMLDivElement>(null);
-  const howRef = useRef<HTMLDivElement>(null);
-  const trustRef = useRef<HTMLDivElement>(null);
+  const heroRef = useRef<HTMLElement>(null);
+  const whyRef = useRef<HTMLElement>(null);
+  const howRef = useRef<HTMLElement>(null);
+  const trustRef = useRef<HTMLElement>(null);
   const [activeSectionId, setActiveSectionId] =
     useState<LandingPageContext['activeSectionId']>('hero');
 
@@ -41,6 +43,23 @@ export default function LandingPageContextProvider({ children }: Props) {
     useCallback((sectionId) => {
       setActiveSectionId(sectionId);
     }, []);
+
+  useOnScreen({
+    ref: heroRef,
+    onIntersecting: () => changeActiveSectionId('hero'),
+  });
+  useOnScreen({
+    ref: whyRef,
+    onIntersecting: () => changeActiveSectionId('why'),
+  });
+  useOnScreen({
+    ref: howRef,
+    onIntersecting: () => changeActiveSectionId('how'),
+  });
+  useOnScreen({
+    ref: trustRef,
+    onIntersecting: () => changeActiveSectionId('trust'),
+  });
 
   const value: LandingPageContext = useMemo(
     () => ({
