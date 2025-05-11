@@ -19,12 +19,11 @@ export default function Navigation() {
     useLandingPageContext();
   return (
     <nav>
-      <ul className="divide-muted-foreground flex [&>li]:px-2 [&>li]:not-last:border-r">
+      <ul className="divide-muted-white flex [&>li]:px-2 [&>li]:not-last:border-r">
         {landingNav.map(({ displayText, id }) => (
           <li key={id}>
             <Button
               onClick={() => {
-                console.log(refs[id]);
                 if (refs[id]?.current) {
                   changeActiveSectionId(id);
                   refs[id]?.current.scrollIntoView({
