@@ -16,15 +16,10 @@ import { HydrateClient, api } from '~/trpc/server';
 
 const SIGNIN_ERROR_URL = '/error';
 
-export default async function LoginPage({
-  params,
-}: {
-  params: { callbackUrl: string | undefined };
-}) {
+export default async function LoginPage() {
   const hello = await api.post.hello({ text: 'from tRPC' });
   const session = await auth();
   // eslint-disable-next-line @typescript-eslint/await-thenable
-  const { callbackUrl } = await params;
   if (session?.user) {
     void api.post.getLatest.prefetch();
   }
@@ -45,7 +40,7 @@ export default async function LoginPage({
                   'use server';
                   try {
                     await signIn(provider.id, {
-                      redirectTo: callbackUrl ?? '/dashboard',
+                      redirectTo: '/dashboard',
                     });
                   } catch (error) {
                     // Signin can fail for a number of reasons, such as the user
