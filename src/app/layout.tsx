@@ -1,6 +1,5 @@
 import { type Metadata } from 'next';
 import { SessionProvider } from 'next-auth/react';
-import { ThemeProvider } from 'next-themes';
 import { Geist } from 'next/font/google';
 
 import { Toaster } from '~/components/ui/sonner';
@@ -26,14 +25,7 @@ export default function RootLayout({
       <body>
         <TRPCReactProvider>
           <SessionProvider>
-            <ThemeProvider
-              attribute="class"
-              defaultTheme="system"
-              enableSystem
-              disableTransitionOnChange
-            >
-              {children}
-            </ThemeProvider>
+            {children}
             <Toaster />
           </SessionProvider>
         </TRPCReactProvider>
