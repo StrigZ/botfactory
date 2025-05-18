@@ -10,11 +10,18 @@ import { type AdapterAccount } from 'next-auth/adapters';
  */
 export const createTable = pgTableCreator((name) => `botfactory_${name}`);
 
-export const posts = createTable(
-  'post',
+export const bots = createTable(
+  'bot',
   (d) => ({
-    id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
+    id: d
+      .varchar({ length: 255 })
+      .notNull()
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
     name: d.varchar({ length: 256 }),
+    token: d.text('token').notNull().unique(),
+    webhookUrl: d.text('webhookUrl'),
+    metadata: d.jsonb('metadata'),
     createdById: d
       .varchar({ length: 255 })
       .notNull()
@@ -30,6 +37,50 @@ export const posts = createTable(
     index('name_idx').on(t.name),
   ],
 );
+
+export const botsRelations = relations(bots, ({ one, many }) => ({
+  users: one(users, {
+    fields: [bots.id],
+    references: [users.id],
+  }),
+  botComponents: many(botComponents),
+}));
+
+export const botComponents = createTable('bot_component', (d) => ({
+  id: d
+    .varchar({ length: 255 })
+    .notNull()
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  botId: d
+    .text('bot_id')
+    .references(() => bots.id, { onDelete: 'cascade' })
+    .notNull(),
+  type: d
+    .text('type', {
+      enum: ['command', 'message', 'keyboard', 'middleware'],
+    })
+    .notNull(),
+  trigger: d.text('trigger'), // Для команд: "/start", для текста: regex
+  config: d.jsonb('config').notNull(), // { response: "Hello!", buttons: [...] }
+  order: d.integer('order').notNull().default(0),
+  createdById: d
+    .varchar({ length: 255 })
+    .notNull()
+    .references(() => users.id),
+  createdAt: d
+    .timestamp({ withTimezone: true })
+    .default(sql`CURRENT_TIMESTAMP`)
+    .notNull(),
+  updatedAt: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
+}));
+
+export const botComponentsRelations = relations(botComponents, ({ one }) => ({
+  bot: one(bots, {
+    fields: [botComponents.botId],
+    references: [bots.id],
+  }),
+}));
 
 export const users = createTable('user', (d) => ({
   id: d
@@ -50,6 +101,7 @@ export const users = createTable('user', (d) => ({
 
 export const usersRelations = relations(users, ({ many }) => ({
   accounts: many(accounts),
+  bots: many(bots),
 }));
 
 export const accounts = createTable(
