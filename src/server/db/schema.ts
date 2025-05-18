@@ -1,5 +1,6 @@
 import { relations, sql } from 'drizzle-orm';
 import { index, pgTableCreator, primaryKey } from 'drizzle-orm/pg-core';
+import { createInsertSchema, createUpdateSchema } from 'drizzle-zod';
 import { type AdapterAccount } from 'next-auth/adapters';
 
 /**
@@ -18,7 +19,7 @@ export const bots = createTable(
       .notNull()
       .primaryKey()
       .$defaultFn(() => crypto.randomUUID()),
-    name: d.varchar({ length: 256 }),
+    name: d.varchar({ length: 256 }).notNull(),
     token: d.text('token').notNull().unique(),
     webhookUrl: d.text('webhookUrl'),
     metadata: d.jsonb('metadata'),
@@ -37,6 +38,9 @@ export const bots = createTable(
     index('name_idx').on(t.name),
   ],
 );
+
+export const botInsertSchema = createInsertSchema(bots);
+export const botUpdateSchema = createUpdateSchema(bots);
 
 export const botsRelations = relations(bots, ({ one, many }) => ({
   users: one(users, {

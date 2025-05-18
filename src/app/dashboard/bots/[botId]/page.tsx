@@ -3,20 +3,29 @@ import { redirect } from 'next/navigation';
 
 import { AppSidebar } from '~/components/AppSidebar';
 import BotList from '~/components/BotList';
+import BotPage from '~/components/BotPage';
 import CreateOrUpdateForm from '~/components/CreateOrUpdateForm';
 import { SiteHeader } from '~/components/SiteHeader';
 import { SidebarInset, SidebarProvider } from '~/components/ui/sidebar';
 import { auth } from '~/server/auth';
 import { HydrateClient, api } from '~/trpc/server';
 
-export default async function Page() {
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ botId: string }>;
+}) {
+  const { botId } = await params;
   const session = await auth();
 
   if (!session?.user) {
     redirect('/');
   }
 
-  void api.bot.getAll.prefetch();
+  void api.bot.getById.prefetch(
+    { id: botId, withComponents: true },
+    { queryHash: 'botToUpdate' },
+  );
 
   return (
     <HydrateClient>
@@ -37,8 +46,7 @@ export default async function Page() {
           <AppSidebar variant="inset" />
           <SidebarInset>
             <SiteHeader />
-            <BotList />
-            <CreateOrUpdateForm />
+            <BotPage botId={botId} />
           </SidebarInset>
         </SidebarProvider>
       </ThemeProvider>
