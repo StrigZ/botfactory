@@ -137,7 +137,7 @@ export const botRouter = createTRPCRouter({
 
         const bot = new Bot(botData.token);
         await bot.api.setWebhook(
-          `${env.VERCEL_URL}/api/telegram/webhook/${bot.token}`,
+          `${env.VERCEL_URL}/api/telegram/webhook/${botData.id}`,
         );
 
         // Update webhook url in db
