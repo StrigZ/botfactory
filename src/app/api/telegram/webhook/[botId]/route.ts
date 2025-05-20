@@ -1,17 +1,22 @@
 import { Bot, webhookCallback } from 'grammy';
 
+import { db } from '~/server/db';
+
 export const dynamic = 'force-dynamic';
 
 export const fetchCache = 'force-no-store';
 
-const token = process.env.TELEGRAM_BOT_TOKEN;
+export async function POST({ params }: { params: Promise<{ botId: string }> }) {
+  const { botId } = await params;
+  const bot = await db.query.bots.findFirst({
+    where: ({ id }, { eq }) => eq(id, botId),
+  });
 
-if (!token)
-  throw new Error('TELEGRAM_BOT_TOKEN environment variable not found.');
-
-const bot = new Bot(token);
-bot.on('message:text', async (ctx) => {
-  await ctx.reply(ctx.message.text);
-});
-
-export const POST = webhookCallback(bot, 'std/http');
+  if (bot) {
+    const botInstance = new Bot(bot?.token);
+    botInstance.on('message:text', async (ctx) => {
+      await ctx.reply(ctx.message.text);
+    });
+    return webhookCallback(botInstance, 'std/http');
+  }
+}
