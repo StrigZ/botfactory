@@ -12,12 +12,10 @@
       ]
     }
   ],
-  "routes": [
+  "rewrites": [
     {
-      "src": "/api/telegram/webhook/(.*)",
-      "dest": "/api/telegram/webhook/$1",
-      "continue": true,
-      "override": true
+      "source": "/api/telegram/webhook/:path*",
+      "destination": "/api/telegram/webhook/:path*"
     }
   ]
 }
