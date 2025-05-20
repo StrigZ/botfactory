@@ -144,7 +144,7 @@ export const botRouter = createTRPCRouter({
         await ctx.db
           .update(bots)
           .set({
-            webhookUrl: `${env.VERCEL_URL}/api/telegram/webhook/${botData?.id}`,
+            webhookUrl: (await bot.api.getWebhookInfo()).url,
             isDeployed: true,
           })
           .where(
