@@ -6,6 +6,21 @@ import { db } from '~/server/db';
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
 
+// CORS headers to be applied to all responses
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*', // Or specify domains like 'https://example.com'
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  'Access-Control-Max-Age': '86400', // 24 hours cache for preflight
+};
+
+export async function OPTIONS(request: Request) {
+  return new Response(null, {
+    status: 200,
+    headers: corsHeaders,
+  });
+}
+
 // Bot instance cache
 const botInstances = new Map<string, Bot>();
 
@@ -47,19 +62,41 @@ export async function POST(
 
     // Validate bot ID
     if (!botId || typeof botId !== 'string') {
-      return NextResponse.json({ error: 'Invalid bot ID' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Invalid bot ID' },
+        {
+          status: 400,
+          headers: corsHeaders,
+        },
+      );
     }
 
     // Get or create bot instance
     const bot = await createBotInstance(botId);
 
-    // Process Telegram update
-    return webhookCallback(bot, 'std/http')(request);
+    // Process Telegram update with Grammy's webhook handler
+    const grammyResponse = await webhookCallback(bot, 'std/http')(request);
+
+    // Create a new response with the same body and status but with CORS headers
+    const responseBody = await grammyResponse.text();
+    const newResponse = new Response(responseBody, {
+      status: grammyResponse.status,
+      statusText: grammyResponse.statusText,
+      headers: {
+        ...Object.fromEntries(grammyResponse.headers),
+        ...corsHeaders,
+      },
+    });
+
+    return newResponse;
   } catch (error) {
     console.error('Webhook error:', error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Unknown error' },
-      { status: 500 },
+      {
+        status: 500,
+        headers: corsHeaders,
+      },
     );
   }
 }
