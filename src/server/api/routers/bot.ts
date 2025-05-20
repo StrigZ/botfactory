@@ -82,19 +82,19 @@ export const botRouter = createTRPCRouter({
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
       // Check if bot exists and user owns it
-      const bot = await ctx.db.query.bots.findFirst({
+      const botData = await ctx.db.query.bots.findFirst({
         where: ({ id, createdById }, { eq, and }) =>
           and(eq(id, input.id), eq(createdById, ctx.session.user.id)),
       });
 
-      if (!bot) {
+      if (!botData) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'Bot with this id does not exist',
         });
       }
 
-      if (bot.isDeployed) {
+      if (botData.isDeployed) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message: 'Bot is already deployed.',
@@ -103,53 +103,58 @@ export const botRouter = createTRPCRouter({
 
       // setup a webhook
       if (env.NODE_ENV === 'production') {
-        const setWebhookFetch = await fetch(
-          `https://api.telegram.org/bot${bot.token}/setWebhook`,
-          {
-            method: 'POST',
-            headers: {
-              accept: 'application/json',
-              'content-type': 'application/json',
-            },
-            body: JSON.stringify({
-              url: `${env.VERCEL_URL}/api/telegram/webhook/${bot?.id}`,
-              certificate: 'Optional',
-            }),
-          },
-        );
-        if (!setWebhookFetch.ok) {
-          throw new TRPCError({
-            code: 'INTERNAL_SERVER_ERROR',
-            message: 'An error occurred during webhook setup.',
-          });
-        }
-        const setWebhookResponse = (await setWebhookFetch.json()) as
-          | SetWebhookResponse
-          | ErrorResponse;
+        // const setWebhookFetch = await fetch(
+        //   `https://api.telegram.org/bot${bot.token}/setWebhook`,
+        //   {
+        //     method: 'POST',
+        //     headers: {
+        //       accept: 'application/json',
+        //       'content-type': 'application/json',
+        //     },
+        //     body: JSON.stringify({
+        //       url: `${env.VERCEL_URL}/api/telegram/webhook/${bot?.id}`,
+        //       certificate: 'Optional',
+        //     }),
+        //   },
+        // );
+        // if (!setWebhookFetch.ok) {
+        //   throw new TRPCError({
+        //     code: 'INTERNAL_SERVER_ERROR',
+        //     message: 'An error occurred during webhook setup.',
+        //   });
+        // }
+        // const setWebhookResponse = (await setWebhookFetch.json()) as
+        //   | SetWebhookResponse
+        //   | ErrorResponse;
 
-        if (!setWebhookResponse.ok) {
-          throw new TRPCError({
-            code: 'INTERNAL_SERVER_ERROR',
-            message: 'An error occurred during webhook setup.',
-            cause: setWebhookResponse.description,
-          });
-        }
+        // if (!setWebhookResponse.ok) {
+        //   throw new TRPCError({
+        //     code: 'INTERNAL_SERVER_ERROR',
+        //     message: 'An error occurred during webhook setup.',
+        //     cause: setWebhookResponse.description,
+        //   });
+        // }
+
+        const bot = new Bot(botData.token);
+        await bot.api.setWebhook(
+          `${env.VERCEL_URL}/api/telegram/webhook/${bot.token}`,
+        );
 
         // Update webhook url in db
         await ctx.db
           .update(bots)
           .set({
-            webhookUrl: `${env.VERCEL_URL}/api/telegram/webhook/${bot?.id}`,
+            webhookUrl: `${env.VERCEL_URL}/api/telegram/webhook/${botData?.id}`,
             isDeployed: true,
           })
           .where(
             and(
-              eq(bots.id, bot?.id),
+              eq(bots.id, botData?.id),
               eq(bots.createdById, ctx.session.user.id),
             ),
           );
       } else if (env.NODE_ENV === 'development') {
-        const devBotInstance = new Bot(bot.token, {}); // <-- put your bot token between the ""
+        const devBotInstance = new Bot(botData.token, {}); // <-- put your bot token between the ""
 
         // Handle the /start command.
         devBotInstance.command('start', (ctx) =>
@@ -166,26 +171,26 @@ export const botRouter = createTRPCRouter({
         await ctx.db
           .update(bots)
           .set({ isDeployed: true })
-          .where(eq(bots.id, bot?.id));
+          .where(eq(bots.id, botData?.id));
       }
     }),
   pause: protectedProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
       // Check if bot exists
-      const bot = await ctx.db.query.bots.findFirst({
+      const botData = await ctx.db.query.bots.findFirst({
         where: ({ id, createdById }, { eq, and }) =>
           and(eq(id, input.id), eq(createdById, ctx.session.user.id)),
       });
 
-      if (!bot) {
+      if (!botData) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'Bot with this id does not exist',
         });
       }
 
-      if (!bot.isDeployed) {
+      if (!botData.isDeployed) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message: 'Bot is already paused.',
@@ -194,34 +199,36 @@ export const botRouter = createTRPCRouter({
 
       // remove webhook
       if (env.NODE_ENV === 'production') {
-        const removeWebhookFetch = await fetch(
-          `https://api.telegram.org/bot${bot.token}/setWebhook?remove=`,
-          {
-            method: 'POST',
-            headers: {
-              accept: 'application/json',
-              'content-type': 'application/json',
-            },
-            body: JSON.stringify({ url: 'Empty' }),
-          },
-        );
-        if (!removeWebhookFetch.ok) {
-          throw new TRPCError({
-            code: 'INTERNAL_SERVER_ERROR',
-            message: 'An error occurred during webhook removing.',
-          });
-        }
-        const setWebhookResponse = (await removeWebhookFetch.json()) as
-          | SetWebhookResponse
-          | ErrorResponse;
+        // const removeWebhookFetch = await fetch(
+        //   `https://api.telegram.org/bot${bot.token}/setWebhook?remove=`,
+        //   {
+        //     method: 'POST',
+        //     headers: {
+        //       accept: 'application/json',
+        //       'content-type': 'application/json',
+        //     },
+        //     body: JSON.stringify({ url: 'Empty' }),
+        //   },
+        // );
+        // if (!removeWebhookFetch.ok) {
+        //   throw new TRPCError({
+        //     code: 'INTERNAL_SERVER_ERROR',
+        //     message: 'An error occurred during webhook removing.',
+        //   });
+        // }
+        // const setWebhookResponse = (await removeWebhookFetch.json()) as
+        //   | SetWebhookResponse
+        //   | ErrorResponse;
 
-        if (!setWebhookResponse.ok) {
-          throw new TRPCError({
-            code: 'INTERNAL_SERVER_ERROR',
-            message: 'An error occurred during webhook removing.',
-            cause: setWebhookResponse.description,
-          });
-        }
+        // if (!setWebhookResponse.ok) {
+        //   throw new TRPCError({
+        //     code: 'INTERNAL_SERVER_ERROR',
+        //     message: 'An error occurred during webhook removing.',
+        //     cause: setWebhookResponse.description,
+        //   });
+        // }
+        const bot = new Bot(botData.token);
+        await bot.api.deleteWebhook();
       } else if (env.NODE_ENV === 'development') {
         void stopBotInstance();
       }
@@ -230,7 +237,10 @@ export const botRouter = createTRPCRouter({
         .update(bots)
         .set({ webhookUrl: null, isDeployed: false })
         .where(
-          and(eq(bots.id, bot?.id), eq(bots.createdById, ctx.session.user.id)),
+          and(
+            eq(bots.id, botData?.id),
+            eq(bots.createdById, ctx.session.user.id),
+          ),
         );
     }),
 
