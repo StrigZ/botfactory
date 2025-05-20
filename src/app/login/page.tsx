@@ -10,20 +10,13 @@ import {
   CardHeader,
   CardTitle,
 } from '~/components/ui/card';
-import { auth, signIn } from '~/server/auth';
+import { signIn } from '~/server/auth';
 import { authConfig } from '~/server/auth/config';
-import { HydrateClient, api } from '~/trpc/server';
+import { HydrateClient } from '~/trpc/server';
 
 const SIGNIN_ERROR_URL = '/error';
 
 export default async function LoginPage() {
-  const hello = await api.post.hello({ text: 'from tRPC' });
-  const session = await auth();
-  // eslint-disable-next-line @typescript-eslint/await-thenable
-  if (session?.user) {
-    void api.post.getLatest.prefetch();
-  }
-
   return (
     <HydrateClient>
       <main className="flex h-screen items-center justify-center bg-gradient-to-b from-white to-purple-300 text-center">
