@@ -22,6 +22,7 @@ export const bots = createTable(
     name: d.varchar({ length: 256 }).notNull(),
     token: d.text('token').notNull().unique(),
     webhookUrl: d.text('webhookUrl'),
+    isDeployed: d.boolean().default(false),
     metadata: d.jsonb('metadata'),
     createdById: d
       .varchar({ length: 255 })

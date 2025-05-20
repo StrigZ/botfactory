@@ -10,6 +10,9 @@ const config = {
     ignoreDuringBuilds: true,
   },
   typescript: { ignoreBuildErrors: true },
+  experimental: {
+    serverComponentsExternalPackages: ['grammy'],
+  },
 };
 
 export default config;
