@@ -1,6 +1,7 @@
 import { Bot, webhookCallback } from 'grammy';
 import { NextResponse } from 'next/server';
 
+import { BotService } from '~/lib/telegram/bot-service';
 import { db } from '~/server/db';
 
 export const dynamic = 'force-dynamic';
@@ -21,38 +22,6 @@ export async function OPTIONS(request: Request) {
   });
 }
 
-// Bot instance cache
-const botInstances = new Map<string, Bot>();
-
-async function createBotInstance(botId: string) {
-  // Check for existing instance
-  if (botInstances.has(botId)) {
-    return botInstances.get(botId)!;
-  }
-
-  // Fetch bot token from database
-  const botData = await db.query.bots.findFirst({
-    where: ({ id }, { eq }) => eq(id, botId),
-  });
-
-  if (!botData?.token) {
-    throw new Error('Bot not found or missing token');
-  }
-
-  // Create and configure new bot
-  const bot = new Bot(botData.token);
-
-  // Add message handler
-  bot.on('message:text', async (ctx) => {
-    await ctx.reply(ctx.message.text);
-  });
-  bot.command('start', async (ctx) => ctx.reply('DAROVA'));
-
-  // Cache instance
-  botInstances.set(botId, bot);
-  return bot;
-}
-
 export async function POST(
   request: Request,
   { params }: { params: { botId: string } },
@@ -71,11 +40,37 @@ export async function POST(
       );
     }
 
-    // Get or create bot instance
-    const bot = await createBotInstance(botId);
+    const botData = await db.query.bots.findFirst({
+      where: ({ id }, { eq }) => eq(id, botId),
+    });
+
+    if (!botData) {
+      return NextResponse.json(
+        { error: 'Bot with this ID does not exist' },
+        {
+          status: 400,
+          headers: corsHeaders,
+        },
+      );
+    }
+
+    if (!botData.token) {
+      return NextResponse.json(
+        { error: 'Token is invalid or missing.' },
+        {
+          status: 400,
+          headers: corsHeaders,
+        },
+      );
+    }
+
+    const botService = new BotService(botData.token);
 
     // Process Telegram update with Grammy's webhook handler
-    const grammyResponse = await webhookCallback(bot, 'std/http')(request);
+    const grammyResponse = await webhookCallback(
+      botService.getBot(),
+      'std/http',
+    )(request);
 
     // Create a new response with the same body and status but with CORS headers
     const responseBody = await grammyResponse.text();

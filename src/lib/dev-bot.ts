@@ -1,12 +1,38 @@
-import { type Bot } from 'grammy';
+import { BotService } from './telegram/bot-service';
 
-let botInstance: Bot | undefined;
+let devBotInstance: DevBotService | undefined;
 
-export const getBotInstance = () => botInstance;
-export const setBotInstance = (bot: Bot) => (botInstance = bot);
-export const stopBotInstance = async () => {
-  if (botInstance) {
-    await botInstance.stop();
-    botInstance = undefined;
-  }
+export const startDevBot = async (token: string) => {
+  devBotInstance = new DevBotService(token);
+  await devBotInstance.startDevBot();
+  return true;
 };
+
+export const stopDevBot = async () => {
+  if (devBotInstance) {
+    await devBotInstance.stopDevBot();
+    devBotInstance = undefined;
+    return true;
+  }
+  return false;
+};
+
+export const getDevBot = async () => devBotInstance;
+
+export class DevBotService extends BotService {
+  constructor(token: string) {
+    super(token);
+  }
+
+  async startDevBot() {
+    console.log('Starting dev bot...');
+    void this.bot.start();
+    console.log('Started dev bot!');
+  }
+
+  async stopDevBot() {
+    console.log('Stopping dev bot...');
+    void this.bot.stop();
+    console.log('Stopped dev bot!');
+  }
+}

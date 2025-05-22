@@ -11,7 +11,7 @@ export default function BotList({}: Props) {
   const [data] = api.bot.getAll.useSuspenseQuery();
 
   const deployBot = api.bot.deploy.useMutation();
-  const pauseBot = api.bot.pause.useMutation();
+  const undeployBot = api.bot.undeploy.useMutation();
 
   if (!data) {
     return <p>loading</p>;
@@ -30,7 +30,7 @@ export default function BotList({}: Props) {
             <Button onClick={() => deployBot.mutate({ id: bot.id })}>
               Deploy
             </Button>
-            <Button onClick={() => pauseBot.mutate({ id: bot.id })}>
+            <Button onClick={() => undeployBot.mutate({ id: bot.id })}>
               Pause
             </Button>
           </li>
