@@ -32,6 +32,7 @@ export const botRouter = createTRPCRouter({
           name: input.name,
           token: input.token,
           createdById: ctx.session.user.id,
+          status: 'draft',
         })
         .returning();
 
@@ -53,7 +54,7 @@ export const botRouter = createTRPCRouter({
         });
       }
 
-      if (botData.isDeployed) {
+      if (botData.status === 'published') {
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message: 'Bot is already deployed.',
@@ -88,7 +89,7 @@ export const botRouter = createTRPCRouter({
         });
       }
 
-      if (!botData.isDeployed) {
+      if (botData.status === 'paused') {
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message: 'Bot is already paused.',

@@ -2,7 +2,7 @@ import { eq } from 'drizzle-orm';
 
 import { env } from '~/env';
 import { db } from '~/server/db';
-import { bots } from '~/server/db/schema';
+import { botDeployments, bots } from '~/server/db/schema';
 
 import { startDevBot, stopDevBot } from '../dev-bot';
 import { BotService } from './bot-service';
@@ -14,8 +14,20 @@ export class BotDeploymentService {
   }
 
   async deployBot(botId: string) {
-    const webhookUrl = `${env.VERCEL_URL}/api/telegram/webhook/${botId}?x-vercel-protection-bypass=${env.VERCEL_AUTOMATION_BYPASS_SECRET}`;
+    let currentDeployment;
     try {
+      const [newDeployment] = await db
+        .insert(botDeployments)
+        .values({ botId, status: 'in_progress' })
+        .returning();
+
+      if (!newDeployment) {
+        throw new Error('Failed to create new deployment entry in DB.');
+      }
+
+      currentDeployment = newDeployment;
+
+      const webhookUrl = `${env.VERCEL_URL}/api/telegram/webhook/${botId}?x-vercel-protection-bypass=${env.VERCEL_AUTOMATION_BYPASS_SECRET}`;
       const success =
         env.NODE_ENV === 'production'
           ? await this.botService.setupWebhook(webhookUrl)
@@ -24,19 +36,31 @@ export class BotDeploymentService {
       if (!success) {
         throw new Error('Failed to set the webhook.');
       }
-      // update deployment data in db
-      // update bot data in db
+
+      await db
+        .update(botDeployments)
+        .set({ status: 'deployed' })
+        .where(eq(botDeployments.id, currentDeployment.id));
+
       await db
         .update(bots)
-        .set({ webhookUrl, isDeployed: true })
+        .set({ status: 'published' })
         .where(eq(bots.id, botId));
+
       return { success: true, webhookUrl };
     } catch (error) {
-      if (error instanceof Error) {
-        console.error('Error during deployment: ', error);
-        // TODO: update deployment status to failed in deployment schema
-        return { success: false, error: error.message };
+      console.error('Error during deployment: ', error);
+      if (currentDeployment) {
+        await db
+          .update(botDeployments)
+          .set({ status: 'failed' })
+          .where(eq(botDeployments.id, currentDeployment.id));
       }
+
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown Error.',
+      };
     }
   }
 
@@ -50,18 +74,14 @@ export class BotDeploymentService {
       if (!success) {
         throw new Error('Failed to remove the webhook.');
       }
-      // update bot status in bot schema
-      await db
-        .update(bots)
-        .set({ isDeployed: false })
-        .where(eq(bots.id, botId));
+
+      await db.update(bots).set({ status: 'paused' }).where(eq(bots.id, botId));
 
       return { success: true };
-      // TODO: update deployment status to paused in deployment schema
     } catch (error) {
       if (error instanceof Error) {
         console.error('Failed to undeploy the bot: ', error);
-        // TODO: update deployment status to failed in deployment schema
+
         return { success: false, error: error.message };
       }
     }
