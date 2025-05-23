@@ -2,8 +2,8 @@ import { BotService } from './telegram/bot-service';
 
 let devBotInstance: DevBotService | undefined;
 
-export const startDevBot = async (token: string) => {
-  devBotInstance = new DevBotService(token);
+export const startDevBot = async (token: string, botId: string) => {
+  devBotInstance = new DevBotService(token, botId);
   await devBotInstance.startDevBot();
   return true;
 };
@@ -20,8 +20,8 @@ export const stopDevBot = async () => {
 export const getDevBot = async () => devBotInstance;
 
 export class DevBotService extends BotService {
-  constructor(token: string) {
-    super(token);
+  constructor(token: string, botId: string) {
+    super(token, botId);
   }
 
   async startDevBot() {

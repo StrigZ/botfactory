@@ -126,10 +126,6 @@ export const botWorkflows = createTable('bot_workflow', (d) => ({
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
   name: d.varchar({ length: 255 }).notNull(),
-  botId: d
-    .varchar({ length: 255 })
-    .notNull()
-    .references(() => bots.id, { onDelete: 'cascade' }),
   createdAt: d
     .timestamp({ withTimezone: true })
     .default(sql`CURRENT_TIMESTAMP`)

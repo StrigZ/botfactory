@@ -64,7 +64,7 @@ export async function POST(
       );
     }
 
-    const botService = new BotService(botData.token);
+    const botService = new BotService(botData.token, botData.id);
 
     // Process Telegram update with Grammy's webhook handler
     const grammyResponse = await webhookCallback(

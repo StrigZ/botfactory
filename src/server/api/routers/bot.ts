@@ -60,8 +60,11 @@ export const botRouter = createTRPCRouter({
         });
       }
 
-      const botDeploymentService = new BotDeploymentService(botData.token);
-      const result = await botDeploymentService.deployBot(botData.id);
+      const botDeploymentService = new BotDeploymentService(
+        botData.token,
+        botData.id,
+      );
+      const result = await botDeploymentService.deployBot();
 
       if (!result?.success) {
         throw new TRPCError({
@@ -96,7 +99,10 @@ export const botRouter = createTRPCRouter({
       }
 
       // remove webhook
-      const botDeploymentService = new BotDeploymentService(botData.token);
+      const botDeploymentService = new BotDeploymentService(
+        botData.token,
+        botData.id,
+      );
       const result = await botDeploymentService.undeployBot(botData.id);
 
       if (!result?.success) {

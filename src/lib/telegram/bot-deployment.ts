@@ -9,16 +9,18 @@ import { BotService } from './bot-service';
 
 export class BotDeploymentService {
   private botService: BotService;
-  constructor(token: string) {
-    this.botService = new BotService(token);
+  private botId: string;
+  constructor(token: string, botId: string) {
+    this.botService = new BotService(token, botId);
+    this.botId = botId;
   }
 
-  async deployBot(botId: string) {
+  async deployBot() {
     let currentDeployment;
     try {
       const [newDeployment] = await db
         .insert(botDeployments)
-        .values({ botId, status: 'in_progress' })
+        .values({ botId: this.botId, status: 'in_progress' })
         .returning();
 
       if (!newDeployment) {
@@ -27,11 +29,11 @@ export class BotDeploymentService {
 
       currentDeployment = newDeployment;
 
-      const webhookUrl = `${env.VERCEL_URL}/api/telegram/webhook/${botId}?x-vercel-protection-bypass=${env.VERCEL_AUTOMATION_BYPASS_SECRET}`;
+      const webhookUrl = `${env.VERCEL_URL}/api/telegram/webhook/${this.botId}?x-vercel-protection-bypass=${env.VERCEL_AUTOMATION_BYPASS_SECRET}`;
       const success =
         env.NODE_ENV === 'production'
           ? await this.botService.setupWebhook(webhookUrl)
-          : await startDevBot(this.botService.bot.token);
+          : await startDevBot(this.botService.bot.token, this.botService.botId);
 
       if (!success) {
         throw new Error('Failed to set the webhook.');
@@ -45,7 +47,7 @@ export class BotDeploymentService {
       await db
         .update(bots)
         .set({ status: 'published' })
-        .where(eq(bots.id, botId));
+        .where(eq(bots.id, this.botId));
 
       return { success: true, webhookUrl };
     } catch (error) {
