@@ -11,8 +11,7 @@ export const botRouter = createTRPCRouter({
   create: protectedProcedure
     .input(z.object({ name: z.string().min(1), token: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
-      const botService = new BotService(input.token);
-      const response = await botService.getMe();
+      const response = await BotService.getMe(input.token);
 
       if (!response.success) {
         throw new TRPCError({

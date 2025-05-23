@@ -68,9 +68,10 @@ export class BotService {
     }
   }
 
-  async getMe() {
+  static async getMe(token: string) {
     try {
-      await this.bot.api.getMe();
+      const api = new Api(token);
+      await api.getMe();
       return { success: true };
     } catch (error) {
       console.error('Error calling getMe api:  ', error);
