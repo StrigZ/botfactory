@@ -25,6 +25,7 @@ import {
 // replace variables
 
 type SessionData = {
+  telegramUserId?: string;
   conversationId?: string;
   currentNodeId?: string;
   variables: Record<string, unknown>;
@@ -130,6 +131,7 @@ export class BotService {
     }
 
     // Reset session
+    ctx.session.telegramUserId = ctx.from?.id.toString();
     ctx.session.currentNodeId = conversation.currentNodeId;
     ctx.session.conversationId = conversation.id;
     ctx.session.variables = {};
@@ -201,7 +203,6 @@ export class BotService {
 
     this.bot.on('message:text', async (ctx) => {
       const messageText = ctx.message.text;
-      const telegramUserId = ctx.from.id.toString();
 
       const conversation = ctx.session.conversationId
         ? await db.query.botConversations.findFirst({
