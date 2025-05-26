@@ -5,7 +5,7 @@ import {
   conversations,
   createConversation,
 } from '@grammyjs/conversations';
-import { type InferSelectModel, eq } from 'drizzle-orm';
+import { type InferSelectModel, and, eq } from 'drizzle-orm';
 import { Api, Bot, type Context, type SessionFlavor, session } from 'grammy';
 import type { Update } from 'grammy/types';
 
@@ -23,6 +23,14 @@ import {
 // process nodes
 
 // replace variables
+
+type MessageNodeData = {
+  message: string;
+};
+type InputNodeData = {
+  message: string;
+  variableName: string;
+};
 
 type SessionData = {
   telegramUserId?: string;
@@ -45,73 +53,42 @@ export class BotService {
     this.bot = new Bot(token);
     this.botId = botId;
     this.registerMiddlewares();
-    this.registerConversation();
     this.registerHandlers();
   }
 
-  getBot() {
-    return this.bot;
+  async processNode(
+    node: InferSelectModel<typeof workflowNodes>,
+    ctx: MyConversationContext,
+  ) {
+    switch (node.type) {
+      case 'message':
+        const messageNodeData = node.data as MessageNodeData;
+        await ctx.reply(messageNodeData.message);
+        break;
+      case 'input':
+        const inputNodeData = node.data as InputNodeData;
+        await ctx.reply(inputNodeData.message);
+        break;
+
+      default:
+        await ctx.reply(
+          (node.data as MessageNodeData).message ?? 'No message was found',
+        );
+        break;
+    }
   }
 
   registerMiddlewares() {
     this.bot.use(session({ initial: () => ({ variables: {} }) }));
-    this.bot.use(conversations());
-
+    this.bot.use(conversations({}));
+    this.bot.use(
+      createConversation(this.workflowConversation.bind(this), { id: 'main' }),
+    );
     this.bot.catch((e) =>
       console.error(
         'ERROR \n **************\n' + e.message + '\n **************',
       ),
     );
-  }
-
-  registerConversation() {
-    this.bot.use(createConversation(this.workflowConversation.bind(this)));
-  }
-
-  async findWorkflow() {
-    const botData = await db.query.bots.findFirst({
-      where: ({ id }, { eq }) => eq(id, this.botId),
-      with: {
-        botWorkflowsToBots: true,
-      },
-    });
-
-    if (!botData) {
-      throw new Error("Bot doesn't exist.");
-    }
-    const workflowData = await db.query.botWorkflows.findFirst({
-      where: ({ id }, { eq }) =>
-        eq(id, botData.botWorkflowsToBots.botWorkflowId),
-      with: { workflowNodes: true, workflowEdges: true },
-    });
-
-    if (!workflowData) {
-      throw new Error("Bot doesn't have workflow.");
-    }
-
-    return workflowData;
-  }
-
-  async findFirstNodeInWorkflow(
-    workflow: InferSelectModel<typeof botWorkflows> & {
-      workflowNodes: InferSelectModel<typeof workflowNodes>[];
-      workflowEdges: InferSelectModel<typeof workflowEdges>[];
-    },
-  ) {
-    const nodes = workflow.workflowNodes;
-    const edges = workflow.workflowEdges;
-
-    const firstNode = nodes.find(
-      (node) =>
-        node.type === 'message' &&
-        !edges.some((edge) => edge.targetId === node.id),
-    );
-
-    if (!firstNode) {
-      throw new Error('Workflow is not properly configured.');
-    }
-
-    return firstNode;
   }
 
   async startNewConversation(ctx: BotContext) {
@@ -136,6 +113,7 @@ export class BotService {
     ctx.session.conversationId = conversation.id;
     ctx.session.variables = {};
 
+    await ctx.conversation.enter('main');
     return conversation;
   }
 
@@ -143,116 +121,104 @@ export class BotService {
     conversation: MyConversation,
     ctx: MyConversationContext,
   ) {
+    // At the start of the conversation, find current workflow
     const workflow = await this.findWorkflow();
+    const nodes = workflow.workflowNodes;
+    const edges = workflow.workflowEdges;
 
+    // Get first node and process it
     const firstNode = await this.findFirstNodeInWorkflow(workflow);
-    // Process the start node
-    // await this.processNode(startNode, ctx, workflow);
+    await this.processNode(firstNode, ctx);
 
-    // Continue processing nodes based on user input
+    // Listen for replies and repeat
     while (true) {
-      // Wait for user input
-      const message = await conversation.wait();
+      // Wait for reply
+      const newCtx = await conversation.wait();
+      // Read session data inside a conversation
+      const session = await conversation.external((ctx) => ctx.session);
 
-      // Get current node ID from session
-      const currentNodeId = ctx.session.currentNodeId;
-      if (!currentNodeId) break;
+      // Get the id of the current node
+      const currentNodeId = session.currentNodeId;
 
-      // Find current node
-      const currentNode = workflow.workflowNodes.find(
-        (node) => node.id === currentNodeId,
-      );
-      if (!currentNode) break;
-
-      // Process user input based on node type
-      if (currentNode.type === 'input') {
-        // Save variable
-        // const variableName = currentNode.data.variableName || 'input';
-        // ctx.session.variables[variableName] = message.text;
-        // Find the next node
+      if (!currentNodeId) {
+        throw new Error('Current node id is not found.');
       }
-      await ctx.reply(
-        'your message: ' +
-          (message.msg?.text ?? '') +
-          'continuing conversation...',
-      );
+      const currentNode = nodes.find((node) => node.id === currentNodeId);
+      if (!currentNode) {
+        throw new Error('Current node is not found.');
+      }
 
-      const edge = workflow.workflowEdges.find(
+      // if current node is of type input
+      // save user's reply to variables
+      if (currentNode.type === 'input') {
+        const inputNodeData = currentNode.data as InputNodeData;
+        await newCtx.reply(
+          'Saving this to the variable' + inputNodeData.variableName,
+        );
+        session.variables[inputNodeData.variableName] = newCtx.message?.text;
+      }
+      // Specific tasks for each node go here...
+
+      // Find edge to the next node
+      const edgeToNextNode = edges.find(
         (edge) => edge.sourceId === currentNode.id,
       );
-      if (edge) {
-        const nextNode = workflow.workflowNodes.find(
-          (node) => node.id === edge.targetId,
-        );
-        if (nextNode) {
-          ctx.session.currentNodeId = nextNode.id;
-          // await this.processNode(nextNode, ctx, workflowData);
-        }
+
+      // Check if this is a last node
+      if (!edgeToNextNode) {
+        await newCtx.reply('You have reached the end of the conversation!');
+
+        // Update conversation data db
+        await conversation.external(async (ctx) => {
+          ctx.session = session;
+          if (ctx.session.conversationId) {
+            await db
+              .update(botConversations)
+              .set({
+                currentNodeId: ctx.session.currentNodeId,
+                variables: ctx.session.variables,
+              })
+              .where(eq(botConversations.id, ctx.session.conversationId));
+          }
+        });
+        break;
       }
+
+      // Get next node id via edge's targetId
+      const nextNode = nodes.find(
+        (node) => node.id === edgeToNextNode.targetId,
+      );
+      if (!nextNode) {
+        throw new Error('Next node is not found.');
+      }
+
+      // Save next node in session for the next reply
+      session.currentNodeId = nextNode.id;
+
+      // Update external session and conversation data in db
+      await conversation.external(async (ctx) => {
+        ctx.session = session;
+        if (ctx.session.conversationId) {
+          await db
+            .update(botConversations)
+            .set({
+              currentNodeId: session.currentNodeId,
+              variables: session.variables,
+            })
+            .where(eq(botConversations.id, ctx.session.conversationId));
+        }
+      });
+      // process next node
+      await this.processNode(nextNode, newCtx);
     }
   }
 
   registerHandlers() {
     this.bot.command('start', async (ctx) => {
-      await this.startNewConversation(ctx);
-
       // TODO: Replace with first node action
       // this.processNode(firstNode)
-      await ctx.reply('Hello! Bot is ready to work!');
-    });
-
-    this.bot.on('message:text', async (ctx) => {
-      const messageText = ctx.message.text;
-
-      const conversation = ctx.session.conversationId
-        ? await db.query.botConversations.findFirst({
-            where: eq(botConversations.id, ctx.session.conversationId),
-          })
-        : await this.startNewConversation(ctx);
-
-      // Get workflow
-      const workflow = await this.findWorkflow();
-      if (!workflow) {
-        await ctx.reply('Sorry, this bot is not properly configured.');
-        return;
-      }
-
-      // Get current node
-      const currentNode = workflow.workflowNodes.find(
-        (node) => node.id === conversation?.currentNodeId,
-      );
-
-      if (!currentNode) {
-        await ctx.reply(
-          "Sorry, I lost track of our conversation. Let's start over.",
-        );
-        await this.startNewConversation(ctx);
-        return;
-      }
-      await ctx.reply('your message: ' + messageText + '. Continuing convo.');
-      // Handle input for input nodes
-      if (currentNode.type === 'input') {
-        // // const variableName = currentNode.data.variableName || 'input';
-        // // const variables = {
-        // //   ...conversation.variables,
-        // //   [variableName]: messageText,
-        // // };
-        // // Update conversation with new variable
-        // await db
-        //   .update(conversations)
-        //   .set({
-        //     variables,
-        //     lastMessageAt: new Date(),
-        //   })
-        //   .where(eq(conversations.id, conversation.id));
-        // Update session
-        // ctx.session.variables = variables;
-        // Proceed to next node
-        // await this.proceedToNextNode(currentNode, ctx, workflow);
-      } else {
-        // For other node types, just process the current node again
-        // await this.processNode(currentNode, ctx, workflow);
-      }
+      await ctx.reply('Hello! Bot is ready to work! Starting conversation...');
+      await this.startNewConversation(ctx);
     });
   }
 
@@ -284,7 +250,11 @@ export class BotService {
     }
   }
 
-  static async getMe(token: string) {
+  public getBot() {
+    return this.bot;
+  }
+
+  public static async getMe(token: string) {
     try {
       const api = new Api(token);
       await api.getMe();
@@ -293,5 +263,51 @@ export class BotService {
       console.error('Error calling getMe api:  ', error);
       return { success: false, error };
     }
+  }
+
+  private async findWorkflow() {
+    const botData = await db.query.bots.findFirst({
+      where: ({ id }, { eq }) => eq(id, this.botId),
+      with: {
+        botWorkflowsToBots: true,
+      },
+    });
+
+    if (!botData) {
+      throw new Error("Bot doesn't exist.");
+    }
+    const workflowData = await db.query.botWorkflows.findFirst({
+      where: ({ id }, { eq }) =>
+        eq(id, botData.botWorkflowsToBots.botWorkflowId),
+      with: { workflowNodes: true, workflowEdges: true },
+    });
+
+    if (!workflowData) {
+      throw new Error("Bot doesn't have workflow.");
+    }
+
+    return workflowData;
+  }
+
+  private async findFirstNodeInWorkflow(
+    workflow: InferSelectModel<typeof botWorkflows> & {
+      workflowNodes: InferSelectModel<typeof workflowNodes>[];
+      workflowEdges: InferSelectModel<typeof workflowEdges>[];
+    },
+  ) {
+    const nodes = workflow.workflowNodes;
+    const edges = workflow.workflowEdges;
+
+    const firstNode = nodes.find(
+      (node) =>
+        node.type === 'message' &&
+        !edges.some((edge) => edge.targetId === node.id),
+    );
+
+    if (!firstNode) {
+      throw new Error('Workflow is not properly configured.');
+    }
+
+    return firstNode;
   }
 }
