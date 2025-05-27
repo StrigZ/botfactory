@@ -1,4 +1,4 @@
-import { relations, sql } from 'drizzle-orm';
+import { type InferSelectModel, relations, sql } from 'drizzle-orm';
 import { index, pgEnum, pgTableCreator, primaryKey } from 'drizzle-orm/pg-core';
 import { createInsertSchema, createUpdateSchema } from 'drizzle-zod';
 import { type AdapterAccount } from 'next-auth/adapters';
@@ -70,35 +70,6 @@ export const bots = createTable(
 export const botInsertSchema = createInsertSchema(bots);
 export const botUpdateSchema = createUpdateSchema(bots);
 
-export const botComponents = createTable('bot_component', (d) => ({
-  id: d
-    .varchar({ length: 255 })
-    .notNull()
-    .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
-  botId: d
-    .text('bot_id')
-    .references(() => bots.id, { onDelete: 'cascade' })
-    .notNull(),
-  type: d
-    .text('type', {
-      enum: ['command', 'message', 'keyboard', 'middleware'],
-    })
-    .notNull(),
-  trigger: d.text('trigger'), // Для команд: "/start", для текста: regex
-  config: d.jsonb('config').notNull(), // { response: "Hello!", buttons: [...] }
-  order: d.integer('order').notNull().default(0),
-  createdById: d
-    .varchar({ length: 255 })
-    .notNull()
-    .references(() => users.id),
-  createdAt: d
-    .timestamp({ withTimezone: true })
-    .default(sql`CURRENT_TIMESTAMP`)
-    .notNull(),
-  updatedAt: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
-}));
-
 export const botConversations = createTable('bot_conversation', (d) => ({
   id: d
     .varchar({ length: 255 })
@@ -121,6 +92,8 @@ export const botConversations = createTable('bot_conversation', (d) => ({
   updatedAt: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
 }));
 
+export type BotConversation = InferSelectModel<typeof botConversations>;
+
 export const botWorkflows = createTable('bot_workflow', (d) => ({
   id: d
     .varchar({ length: 255 })
@@ -134,6 +107,8 @@ export const botWorkflows = createTable('bot_workflow', (d) => ({
     .notNull(),
   updatedAt: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
 }));
+
+export type BotWorkflow = InferSelectModel<typeof botWorkflows>;
 
 export const botWorkflowsToBots = createTable('bot_workflow_to_bot', (d) => ({
   botId: d
@@ -165,6 +140,8 @@ export const workflowNodes = createTable('workflow_node', (d) => ({
   updatedAt: d.timestamp('updated_at').defaultNow().notNull(),
 }));
 
+export type WorkflowNode = InferSelectModel<typeof workflowNodes>;
+
 // Edges (connections between nodes)
 export const workflowEdges = createTable('workflow_edge', (d) => ({
   id: d
@@ -190,6 +167,8 @@ export const workflowEdges = createTable('workflow_edge', (d) => ({
   updatedAt: d.timestamp('updated_at').defaultNow().notNull(),
 }));
 
+export type WorkflowEdge = InferSelectModel<typeof workflowEdges>;
+
 // Deployments history
 export const botDeployments = createTable('bot_deployment', (d) => ({
   id: d
@@ -206,6 +185,8 @@ export const botDeployments = createTable('bot_deployment', (d) => ({
   createdAt: d.timestamp('created_at').defaultNow().notNull(),
   updatedAt: d.timestamp('updated_at').defaultNow().notNull(),
 }));
+
+export type BotDeployments = InferSelectModel<typeof botDeployments>;
 
 export const users = createTable('user', (d) => ({
   id: d
@@ -289,7 +270,6 @@ export const botsRelations = relations(bots, ({ one, many }) => ({
     fields: [bots.id],
     references: [users.id],
   }),
-  botComponents: many(botComponents),
   botConversations: many(botConversations),
   botWorkflowsToBots: one(botWorkflowsToBots, {
     fields: [bots.id],
@@ -347,12 +327,5 @@ export const workflowEdgesRelations = relations(workflowEdges, ({ one }) => ({
   workflowNodes: one(workflowNodes, {
     fields: [workflowEdges.sourceId, workflowEdges.targetId],
     references: [workflowNodes.id, workflowNodes.id],
-  }),
-}));
-
-export const botComponentsRelations = relations(botComponents, ({ one }) => ({
-  bot: one(bots, {
-    fields: [botComponents.botId],
-    references: [bots.id],
   }),
 }));

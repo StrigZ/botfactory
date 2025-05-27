@@ -129,11 +129,6 @@ export const botRouter = createTRPCRouter({
         where({ id, createdById }, { eq, and }) {
           return and(eq(createdById, ctx.session.user.id), eq(id, input.id));
         },
-        with: {
-          botComponents: {
-            orderBy: (components) => [components.order],
-          },
-        },
       }),
     ),
 

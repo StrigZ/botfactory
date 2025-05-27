@@ -4,16 +4,16 @@ import {
   conversations,
   createConversation,
 } from '@grammyjs/conversations';
-import { type InferSelectModel, eq } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { Api, Bot, type Context, type SessionFlavor, session } from 'grammy';
 
 import { db } from '~/server/db';
 import {
+  type BotWorkflow,
   type NodeType,
+  type WorkflowEdge,
+  type WorkflowNode,
   botConversations,
-  type botWorkflows,
-  type workflowEdges,
-  type workflowNodes,
 } from '~/server/db/schema';
 
 type MessageNodeData = {
@@ -38,11 +38,9 @@ type MyConversationContext = Context & SessionFlavor<SessionData>;
 
 type MyConversation = Conversation<BotContext, MyConversationContext>;
 
-export type BotWorkflowWithNodesAndEdges = InferSelectModel<
-  typeof botWorkflows
-> & {
-  workflowNodes: InferSelectModel<typeof workflowNodes>[];
-  workflowEdges: InferSelectModel<typeof workflowEdges>[];
+export type BotWorkflowWithNodesAndEdges = BotWorkflow & {
+  workflowNodes: WorkflowNode[];
+  workflowEdges: WorkflowEdge[];
 };
 
 const nodeTypesThatNeedNewContext: NodeType[] = ['input'];
@@ -165,9 +163,7 @@ export class BotService {
     }
   }
 
-  private async getNextNodeByEdge(
-    edgeToNextNode: InferSelectModel<typeof workflowEdges>,
-  ) {
+  private async getNextNodeByEdge(edgeToNextNode: WorkflowEdge) {
     const workflowNodes = this.botWorkflow.workflowNodes;
     const nextNode = workflowNodes.find(
       (node) => node.id === edgeToNextNode.targetId,
@@ -199,7 +195,7 @@ export class BotService {
   }
 
   private async processNode(
-    node: InferSelectModel<typeof workflowNodes>,
+    node: WorkflowNode,
     ctx: MyConversationContext,
     internalSession: SessionData,
   ) {
@@ -248,12 +244,7 @@ export class BotService {
       .join('');
   }
 
-  private async getFirstNodeInWorkflow(
-    workflow: InferSelectModel<typeof botWorkflows> & {
-      workflowNodes: InferSelectModel<typeof workflowNodes>[];
-      workflowEdges: InferSelectModel<typeof workflowEdges>[];
-    },
-  ) {
+  private async getFirstNodeInWorkflow(workflow: BotWorkflowWithNodesAndEdges) {
     const nodes = workflow.workflowNodes;
     const edges = workflow.workflowEdges;
 
