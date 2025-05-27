@@ -33,7 +33,7 @@ export class BotDeploymentService {
       const success =
         env.NODE_ENV === 'production'
           ? await this.botService.setupWebhook(webhookUrl)
-          : await startDevBot(this.botService.bot.token, this.botService.botId);
+          : await startDevBot(this.botService.getBot().token, this.botId);
 
       if (!success) {
         throw new Error('Failed to set the webhook.');

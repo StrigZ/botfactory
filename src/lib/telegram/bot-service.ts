@@ -6,7 +6,6 @@ import {
 } from '@grammyjs/conversations';
 import { type InferSelectModel, eq } from 'drizzle-orm';
 import { Api, Bot, type Context, type SessionFlavor, session } from 'grammy';
-import type { Update } from 'grammy/types';
 
 import { db } from '~/server/db';
 import {
@@ -39,8 +38,8 @@ type MyConversationContext = Context & SessionFlavor<SessionData>;
 type MyConversation = Conversation<BotContext, MyConversationContext>;
 
 export class BotService {
-  bot: Bot<BotContext>;
-  botId: string;
+  private bot: Bot<BotContext>;
+  private botId: string;
   constructor(token: string, botId: string) {
     this.bot = new Bot(token);
     this.botId = botId;
@@ -48,7 +47,7 @@ export class BotService {
     this.registerHandlers();
   }
 
-  registerMiddlewares() {
+  private registerMiddlewares() {
     this.bot.use(session({ initial: () => ({ variables: {} }) }));
     this.bot.use(conversations({}));
     this.bot.use(
@@ -61,10 +60,10 @@ export class BotService {
     );
   }
 
-  async startNewConversation(ctx: BotContext) {
-    const workflow = await this.findWorkflow();
+  private async startNewConversation(ctx: BotContext) {
+    const workflow = await this.getWorkflow();
 
-    const firstNode = await this.findFirstNodeInWorkflow(workflow);
+    const firstNode = await this.getFirstNodeInWorkflow(workflow);
 
     // Create new conversation in DB
     const [conversation] = await db
@@ -87,12 +86,12 @@ export class BotService {
     return conversation;
   }
 
-  async workflowConversation(
+  private async workflowConversation(
     conversation: MyConversation,
     ctx: MyConversationContext,
   ) {
     // At the start of the conversation, find current workflow
-    const workflow = await this.findWorkflow();
+    const workflow = await this.getWorkflow();
     const nodes = workflow.workflowNodes;
     const edges = workflow.workflowEdges;
 
@@ -106,7 +105,7 @@ export class BotService {
       // Get the id of the current node
       const currentNodeId =
         internalSession.currentNodeId ??
-        (await this.findFirstNodeInWorkflow(workflow)).id;
+        (await this.getFirstNodeInWorkflow(workflow)).id;
 
       if (!currentNodeId) {
         throw new Error('Current node id is not found.');
@@ -193,7 +192,7 @@ export class BotService {
     }
   }
 
-  registerHandlers() {
+  private registerHandlers() {
     this.bot.command('start', async (ctx) => {
       // TODO: Replace with first node action
       // this.processNode(firstNode)
@@ -202,15 +201,7 @@ export class BotService {
     });
   }
 
-  async handleUpdate(update: Update) {
-    try {
-      await this.bot.handleUpdate(update);
-    } catch (error) {
-      console.error('Error handling update', error);
-    }
-  }
-
-  async setupWebhook(webhookUrl: string) {
+  public async setupWebhook(webhookUrl: string) {
     try {
       await this.bot.api.setWebhook(webhookUrl);
       return true;
@@ -220,7 +211,7 @@ export class BotService {
     }
   }
 
-  async removeWebhook() {
+  public async removeWebhook() {
     try {
       await this.bot.api.deleteWebhook();
       return true;
@@ -269,7 +260,7 @@ export class BotService {
       .join('');
   }
 
-  private async findWorkflow() {
+  private async getWorkflow() {
     const botData = await db.query.bots.findFirst({
       where: ({ id }, { eq }) => eq(id, this.botId),
       with: {
@@ -293,7 +284,7 @@ export class BotService {
     return workflowData;
   }
 
-  private async findFirstNodeInWorkflow(
+  private async getFirstNodeInWorkflow(
     workflow: InferSelectModel<typeof botWorkflows> & {
       workflowNodes: InferSelectModel<typeof workflowNodes>[];
       workflowEdges: InferSelectModel<typeof workflowEdges>[];
