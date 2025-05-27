@@ -201,41 +201,6 @@ export class BotService {
     });
   }
 
-  public async setupWebhook(webhookUrl: string) {
-    try {
-      await this.bot.api.setWebhook(webhookUrl);
-      return true;
-    } catch (error) {
-      console.error('Error calling setWebhook api: ', error);
-      return false;
-    }
-  }
-
-  public async removeWebhook() {
-    try {
-      await this.bot.api.deleteWebhook();
-      return true;
-    } catch (error) {
-      console.error('Error calling deleteWebhook api:  ', error);
-      return false;
-    }
-  }
-
-  public getBot() {
-    return this.bot;
-  }
-
-  public static async getMe(token: string) {
-    try {
-      const api = new Api(token);
-      await api.getMe();
-      return { success: true };
-    } catch (error) {
-      console.error('Error calling getMe api:  ', error);
-      return { success: false, error };
-    }
-  }
-
   private replaceVariables(str: string, variables: Record<string, unknown>) {
     if (!str.includes('%s')) {
       return str;
@@ -304,5 +269,40 @@ export class BotService {
     }
 
     return firstNode;
+  }
+
+  public async setupWebhook(webhookUrl: string) {
+    try {
+      await this.bot.api.setWebhook(webhookUrl);
+      return true;
+    } catch (error) {
+      console.error('Error calling setWebhook api: ', error);
+      return false;
+    }
+  }
+
+  public async removeWebhook() {
+    try {
+      await this.bot.api.deleteWebhook();
+      return true;
+    } catch (error) {
+      console.error('Error calling deleteWebhook api:  ', error);
+      return false;
+    }
+  }
+
+  public getBot() {
+    return this.bot;
+  }
+
+  public static async getMe(token: string) {
+    try {
+      const api = new Api(token);
+      await api.getMe();
+      return { success: true };
+    } catch (error) {
+      console.error('Error calling getMe api:  ', error);
+      return { success: false, error };
+    }
   }
 }

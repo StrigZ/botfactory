@@ -15,7 +15,7 @@ export class BotDeploymentService {
     this.botId = botId;
   }
 
-  async deployBot() {
+  public async deployBot() {
     let currentDeployment;
     try {
       const [newDeployment] = await db
@@ -66,7 +66,7 @@ export class BotDeploymentService {
     }
   }
 
-  async undeployBot(botId: string) {
+  public async undeployBot(botId: string) {
     try {
       const success =
         env.NODE_ENV === 'production'
