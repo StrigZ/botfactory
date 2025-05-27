@@ -9,6 +9,7 @@ import { Api, Bot, type Context, type SessionFlavor, session } from 'grammy';
 
 import { db } from '~/server/db';
 import {
+  type NodeType,
   botConversations,
   type botWorkflows,
   type workflowEdges,
@@ -36,6 +37,8 @@ type BotContext = ConversationFlavor<Context & SessionFlavor<SessionData>>;
 type MyConversationContext = Context & SessionFlavor<SessionData>;
 
 type MyConversation = Conversation<BotContext, MyConversationContext>;
+
+const nodeTypesThatNeedNewContext: NodeType[] = ['input'];
 
 export class BotService {
   private bot: Bot<BotContext>;
@@ -124,21 +127,12 @@ export class BotService {
 
       // if current node's type is not input
       // don't wait for response
-      const newCtx =
-        currentNode.type === 'input' ? await conversation.wait() : ctx;
+      const newCtx = nodeTypesThatNeedNewContext.includes(currentNode.type)
+        ? await conversation.wait()
+        : ctx;
 
-      // if current node is of type input
-      // save user's reply to variables
-      if (currentNode.type === 'input') {
-        const inputNodeData = currentNode.data as InputNodeData;
-        await newCtx.reply(
-          `Saving this to the variable \`${inputNodeData.variableName}\``,
-        );
-        internalSession.variables[inputNodeData.variableName] =
-          newCtx.message?.text;
-      }
-      // Specific tasks for each node go here...
-      // this.processNode(currentNode)
+      // process node
+      await this.processNode(currentNode, newCtx, internalSession);
 
       // Find edge to the next node
       const edgeToNextNode = edges.find(
@@ -192,6 +186,26 @@ export class BotService {
     }
   }
 
+  private async processNode(
+    node: InferSelectModel<typeof workflowNodes>,
+    ctx: MyConversationContext,
+    internalSession: SessionData,
+  ) {
+    switch (node.type) {
+      case 'input':
+        const inputNodeData = node.data as InputNodeData;
+        await ctx.reply(
+          `Saving this to the variable \`${inputNodeData.variableName}\``,
+        );
+        internalSession.variables[inputNodeData.variableName] =
+          ctx.message?.text;
+        break;
+
+      default:
+        break;
+    }
+  }
+
   private registerHandlers() {
     this.bot.command('start', async (ctx) => {
       // TODO: Replace with first node action
@@ -205,7 +219,6 @@ export class BotService {
     if (!str.includes('%s')) {
       return str;
     }
-    console.log(variables);
 
     return str
       .split('%s')

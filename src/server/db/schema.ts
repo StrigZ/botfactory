@@ -21,7 +21,9 @@ export const nodeTypeEnum = pgEnum('node_type', [
   'media',
   'location',
   'payment',
-]);
+] as const);
+
+export type NodeType = (typeof nodeTypeEnum.enumValues)[number];
 
 export const botStatusEnum = pgEnum('bot_status', [
   'draft',
