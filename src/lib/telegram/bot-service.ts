@@ -110,13 +110,11 @@ export class BotService {
         internalSession.currentNodeId ??
         (await this.getFirstNodeInWorkflow(workflow)).id;
 
-      if (!currentNodeId) {
-        throw new Error('Current node id is not found.');
-      }
       const currentNode = nodes.find((node) => node.id === currentNodeId);
       if (!currentNode) {
         throw new Error('Current node is not found.');
       }
+
       // Send current node's message
       await ctx.reply(
         this.replaceVariables(
@@ -142,48 +140,51 @@ export class BotService {
       // Check if this is a last node
       if (!edgeToNextNode) {
         await newCtx.reply('You have reached the end of the conversation!');
-
-        // Update conversation data db
-        await conversation.external(async (ctx) => {
-          ctx.session = internalSession;
-          if (ctx.session.conversationId) {
-            await db
-              .update(botConversations)
-              .set({
-                currentNodeId: ctx.session.currentNodeId,
-                variables: ctx.session.variables,
-              })
-              .where(eq(botConversations.id, ctx.session.conversationId));
-          }
-        });
+        await this.saveConversationData(conversation, internalSession);
         break;
       }
 
       // Get next node id via edge's targetId
-      const nextNode = nodes.find(
-        (node) => node.id === edgeToNextNode.targetId,
-      );
-      if (!nextNode) {
-        throw new Error('Next node is not found.');
-      }
+      const nextNode = await this.getNextNodeByEdge(edgeToNextNode);
 
       // Save next node in session for the next reply
       internalSession.currentNodeId = nextNode.id;
 
-      // Update external session and conversation data in db
-      await conversation.external(async (ctx) => {
-        ctx.session = internalSession;
-        if (ctx.session.conversationId) {
-          await db
-            .update(botConversations)
-            .set({
-              currentNodeId: internalSession.currentNodeId,
-              variables: internalSession.variables,
-            })
-            .where(eq(botConversations.id, ctx.session.conversationId));
-        }
-      });
+      await this.saveConversationData(conversation, internalSession);
     }
+  }
+
+  private async getNextNodeByEdge(
+    edgeToNextNode: InferSelectModel<typeof workflowEdges>,
+  ) {
+    const workflowNodes = (await this.getWorkflow()).workflowNodes;
+    const nextNode = workflowNodes.find(
+      (node) => node.id === edgeToNextNode.targetId,
+    );
+    if (!nextNode) {
+      throw new Error('Next node is not found.');
+    }
+    return nextNode;
+  }
+
+  private async saveConversationData(
+    conversation: MyConversation,
+    internalSession: SessionData,
+  ) {
+    await conversation.external(async (ctx) => {
+      // Sync external session with internalSession session
+      ctx.session = internalSession;
+      if (ctx.session.conversationId) {
+        // Update conversation data in db
+        await db
+          .update(botConversations)
+          .set({
+            currentNodeId: internalSession.currentNodeId,
+            variables: internalSession.variables,
+          })
+          .where(eq(botConversations.id, ctx.session.conversationId));
+      }
+    });
   }
 
   private async processNode(
@@ -208,8 +209,6 @@ export class BotService {
 
   private registerHandlers() {
     this.bot.command('start', async (ctx) => {
-      // TODO: Replace with first node action
-      // this.processNode(firstNode)
       await ctx.reply('Hello! Bot is ready to work! Starting conversation...');
       await this.startNewConversation(ctx);
     });
