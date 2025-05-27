@@ -26,13 +26,13 @@ export class DevBotService extends BotService {
 
   async startDevBot() {
     console.log('Starting dev bot...');
-    void this.bot.start();
+    void this.getBot().start();
     console.log('Started dev bot!');
   }
 
   async stopDevBot() {
     console.log('Stopping dev bot...');
-    void this.bot.stop();
+    void this.getBot().stop();
     console.log('Stopped dev bot!');
   }
 }
