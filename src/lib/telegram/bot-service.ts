@@ -38,14 +38,27 @@ type MyConversationContext = Context & SessionFlavor<SessionData>;
 
 type MyConversation = Conversation<BotContext, MyConversationContext>;
 
+export type BotWorkflowWithNodesAndEdges = InferSelectModel<
+  typeof botWorkflows
+> & {
+  workflowNodes: InferSelectModel<typeof workflowNodes>[];
+  workflowEdges: InferSelectModel<typeof workflowEdges>[];
+};
+
 const nodeTypesThatNeedNewContext: NodeType[] = ['input'];
 
 export class BotService {
   private bot: Bot<BotContext>;
   private botId: string;
-  constructor(token: string, botId: string) {
+  public botWorkflow: BotWorkflowWithNodesAndEdges;
+  constructor(
+    token: string,
+    botId: string,
+    botWorkflow: BotWorkflowWithNodesAndEdges,
+  ) {
     this.bot = new Bot(token);
     this.botId = botId;
+    this.botWorkflow = botWorkflow;
     this.registerMiddlewares();
     this.registerHandlers();
   }
@@ -64,9 +77,7 @@ export class BotService {
   }
 
   private async startNewConversation(ctx: BotContext) {
-    const workflow = await this.getWorkflow();
-
-    const firstNode = await this.getFirstNodeInWorkflow(workflow);
+    const firstNode = await this.getFirstNodeInWorkflow(this.botWorkflow);
 
     // Create new conversation in DB
     const [conversation] = await db
@@ -94,7 +105,7 @@ export class BotService {
     ctx: MyConversationContext,
   ) {
     // At the start of the conversation, find current workflow
-    const workflow = await this.getWorkflow();
+    const workflow = this.botWorkflow;
     const nodes = workflow.workflowNodes;
     const edges = workflow.workflowEdges;
 
@@ -157,7 +168,7 @@ export class BotService {
   private async getNextNodeByEdge(
     edgeToNextNode: InferSelectModel<typeof workflowEdges>,
   ) {
-    const workflowNodes = (await this.getWorkflow()).workflowNodes;
+    const workflowNodes = this.botWorkflow.workflowNodes;
     const nextNode = workflowNodes.find(
       (node) => node.id === edgeToNextNode.targetId,
     );
@@ -237,30 +248,6 @@ export class BotService {
       .join('');
   }
 
-  private async getWorkflow() {
-    const botData = await db.query.bots.findFirst({
-      where: ({ id }, { eq }) => eq(id, this.botId),
-      with: {
-        botWorkflowsToBots: true,
-      },
-    });
-
-    if (!botData) {
-      throw new Error("Bot doesn't exist.");
-    }
-    const workflowData = await db.query.botWorkflows.findFirst({
-      where: ({ id }, { eq }) =>
-        eq(id, botData.botWorkflowsToBots.botWorkflowId),
-      with: { workflowNodes: true, workflowEdges: true },
-    });
-
-    if (!workflowData) {
-      throw new Error("Bot doesn't have workflow.");
-    }
-
-    return workflowData;
-  }
-
   private async getFirstNodeInWorkflow(
     workflow: InferSelectModel<typeof botWorkflows> & {
       workflowNodes: InferSelectModel<typeof workflowNodes>[];
@@ -316,5 +303,29 @@ export class BotService {
       console.error('Error calling getMe api:  ', error);
       return { success: false, error };
     }
+  }
+
+  public static async create(token: string, botId: string) {
+    const botData = await db.query.bots.findFirst({
+      where: ({ id }, { eq }) => eq(id, botId),
+      with: {
+        botWorkflowsToBots: true,
+      },
+    });
+
+    if (!botData) {
+      throw new Error("Bot with this id doesn't exist.");
+    }
+    const workflowData = await db.query.botWorkflows.findFirst({
+      where: ({ id }, { eq }) =>
+        eq(id, botData.botWorkflowsToBots.botWorkflowId),
+      with: { workflowNodes: true, workflowEdges: true },
+    });
+
+    if (!workflowData) {
+      throw new Error("Bot doesn't have configured workflow.");
+    }
+
+    return new BotService(token, botId, workflowData);
   }
 }

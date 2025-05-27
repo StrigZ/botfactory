@@ -1,4 +1,4 @@
-import { Bot, webhookCallback } from 'grammy';
+import { webhookCallback } from 'grammy';
 import { NextResponse } from 'next/server';
 
 import { BotService } from '~/lib/telegram/bot-service';
@@ -64,7 +64,7 @@ export async function POST(
       );
     }
 
-    const botService = new BotService(botData.token, botData.id);
+    const botService = await BotService.create(botData.token, botData.id);
 
     // Process Telegram update with Grammy's webhook handler
     const grammyResponse = await webhookCallback(

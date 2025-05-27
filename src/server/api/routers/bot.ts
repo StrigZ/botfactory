@@ -60,7 +60,7 @@ export const botRouter = createTRPCRouter({
         });
       }
 
-      const botDeploymentService = new BotDeploymentService(
+      const botDeploymentService = await BotDeploymentService.create(
         botData.token,
         botData.id,
       );
@@ -99,7 +99,7 @@ export const botRouter = createTRPCRouter({
       }
 
       // remove webhook
-      const botDeploymentService = new BotDeploymentService(
+      const botDeploymentService = await BotDeploymentService.create(
         botData.token,
         botData.id,
       );

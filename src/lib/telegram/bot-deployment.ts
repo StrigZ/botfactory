@@ -10,8 +10,8 @@ import { BotService } from './bot-service';
 export class BotDeploymentService {
   private botService: BotService;
   private botId: string;
-  constructor(token: string, botId: string) {
-    this.botService = new BotService(token, botId);
+  constructor(botId: string, botService: BotService) {
+    this.botService = botService;
     this.botId = botId;
   }
 
@@ -87,5 +87,10 @@ export class BotDeploymentService {
         return { success: false, error: error.message };
       }
     }
+  }
+
+  public static async create(token: string, botId: string) {
+    const botService = await BotService.create(token, botId);
+    return new BotDeploymentService(botId, botService);
   }
 }
