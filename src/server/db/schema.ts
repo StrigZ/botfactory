@@ -80,6 +80,7 @@ export const botConversations = createTable('bot_conversation', (d) => ({
     .varchar({ length: 255 })
     .notNull()
     .references(() => workflowNodes.id),
+  telegramId: d.varchar({ length: 255 }).notNull(),
   variables: d.jsonb().default({}).notNull(),
   botId: d
     .varchar({ length: 255 })

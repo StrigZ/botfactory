@@ -78,10 +78,17 @@ export class BotService {
     const firstNode = await this.getFirstNodeInWorkflow(this.botWorkflow);
 
     // Create new conversation in DB
+    if (!ctx.from) {
+      throw new Error('Telegram user is not found.');
+    }
+
     const [conversation] = await db
       .insert(botConversations)
-      // TODO: save user tg id
-      .values({ botId: this.botId, currentNodeId: firstNode.id })
+      .values({
+        botId: this.botId,
+        currentNodeId: firstNode.id,
+        telegramId: ctx.from?.id.toString(),
+      })
       .returning();
 
     if (!conversation) {
