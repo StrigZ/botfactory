@@ -1,9 +1,10 @@
+import { LoaderPinwheel } from 'lucide-react';
 import { ThemeProvider } from 'next-themes';
 import { redirect } from 'next/navigation';
+import { Suspense } from 'react';
 
 import { AppSidebar } from '~/components/AppSidebar';
-import BotList from '~/components/BotList';
-import CreateOrUpdateForm from '~/components/CreateOrUpdateForm';
+import BotTable from '~/components/BotTable/BotTable';
 import { SiteHeader } from '~/components/SiteHeader';
 import { SidebarInset, SidebarProvider } from '~/components/ui/sidebar';
 import { auth } from '~/server/auth';
@@ -35,10 +36,27 @@ export default async function Page() {
           }
         >
           <AppSidebar variant="inset" />
-          <SidebarInset>
+          <SidebarInset className="relative">
             <SiteHeader />
-            <BotList />
-            <CreateOrUpdateForm />
+
+            <Suspense
+              fallback={
+                <div className="flex h-full w-full items-center justify-center">
+                  <LoaderPinwheel className="animate-spin" size={36} />
+                </div>
+              }
+            >
+              <BotTable />
+            </Suspense>
+            <Suspense
+              fallback={
+                <div className="flex h-full w-full items-center justify-center">
+                  <LoaderPinwheel className="animate-spin" size={36} />
+                </div>
+              }
+            >
+              <BotTable />
+            </Suspense>
           </SidebarInset>
         </SidebarProvider>
       </ThemeProvider>

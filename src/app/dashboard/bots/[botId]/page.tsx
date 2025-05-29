@@ -2,9 +2,7 @@ import { ThemeProvider } from 'next-themes';
 import { redirect } from 'next/navigation';
 
 import { AppSidebar } from '~/components/AppSidebar';
-import BotList from '~/components/BotList';
 import BotPage from '~/components/BotPage';
-import CreateOrUpdateForm from '~/components/CreateOrUpdateForm';
 import { SiteHeader } from '~/components/SiteHeader';
 import { SidebarInset, SidebarProvider } from '~/components/ui/sidebar';
 import { auth } from '~/server/auth';

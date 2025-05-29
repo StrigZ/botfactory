@@ -67,6 +67,8 @@ export const bots = createTable(
   ],
 );
 
+export type Bot = InferSelectModel<typeof bots>;
+
 export const botInsertSchema = createInsertSchema(bots);
 export const botUpdateSchema = createUpdateSchema(bots);
 
