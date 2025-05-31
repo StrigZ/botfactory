@@ -32,6 +32,8 @@ export const botStatusEnum = pgEnum('bot_status', [
   'archived',
 ]);
 
+export type BotStatus = (typeof botStatusEnum.enumValues)[number];
+
 export const deploymentStatusEnum = pgEnum('deployment_status', [
   'in_progress',
   'deployed',
