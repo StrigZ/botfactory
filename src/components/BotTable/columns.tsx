@@ -1,7 +1,7 @@
 'use client';
 
 import type { ColumnDef } from '@tanstack/react-table';
-import { ArrowUpDown, Circle } from 'lucide-react';
+import { ArrowUpDown, Circle, SquareArrowOutUpRight } from 'lucide-react';
 import Link from 'next/link';
 
 import { cn } from '~/lib/utils';
@@ -123,14 +123,15 @@ export const columns: ColumnDef<Bot>[] = [
                 : deployBot.mutate({ id: bot.id })
             }
             disabled={isLoading}
+            variant={isPublished ? 'destructive' : 'default'}
           >
             {getDisplayText()}
           </Button>
           <Link
             href={`/dashboard/bots/${bot.id}`}
-            className={buttonVariants({ variant: 'default' })}
+            className={buttonVariants({ variant: 'link' })}
           >
-            Edit
+            <SquareArrowOutUpRight />
           </Link>
         </div>
       );
