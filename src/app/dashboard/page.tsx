@@ -1,10 +1,10 @@
-import { LoaderPinwheel } from 'lucide-react';
 import { ThemeProvider } from 'next-themes';
 import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
 
 import { AppSidebar } from '~/components/AppSidebar';
 import BotTable from '~/components/BotTable/BotTable';
+import LoadingSpinner from '~/components/LoadingSpinner';
 import { SiteHeader } from '~/components/SiteHeader';
 import Summary from '~/components/Summary';
 import { SidebarInset, SidebarProvider } from '~/components/ui/sidebar';
@@ -40,22 +40,10 @@ export default async function Page() {
           <SidebarInset className="relative">
             <SiteHeader />
             <div className="container mx-auto max-w-4xl p-4">
-              <Suspense
-                fallback={
-                  <div className="flex h-full w-full items-center justify-center">
-                    <LoaderPinwheel className="animate-spin" size={36} />
-                  </div>
-                }
-              >
+              <Suspense fallback={<LoadingSpinner />}>
                 <Summary />
               </Suspense>
-              <Suspense
-                fallback={
-                  <div className="flex h-full w-full items-center justify-center">
-                    <LoaderPinwheel className="animate-spin" size={36} />
-                  </div>
-                }
-              >
+              <Suspense fallback={<LoadingSpinner />}>
                 <BotTable />
               </Suspense>
             </div>
