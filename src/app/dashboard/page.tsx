@@ -6,6 +6,7 @@ import { Suspense } from 'react';
 import { AppSidebar } from '~/components/AppSidebar';
 import BotTable from '~/components/BotTable/BotTable';
 import { SiteHeader } from '~/components/SiteHeader';
+import Summary from '~/components/Summary';
 import { SidebarInset, SidebarProvider } from '~/components/ui/sidebar';
 import { auth } from '~/server/auth';
 import { HydrateClient, api } from '~/trpc/server';
@@ -38,25 +39,26 @@ export default async function Page() {
           <AppSidebar variant="inset" />
           <SidebarInset className="relative">
             <SiteHeader />
-
-            <Suspense
-              fallback={
-                <div className="flex h-full w-full items-center justify-center">
-                  <LoaderPinwheel className="animate-spin" size={36} />
-                </div>
-              }
-            >
-              <BotTable />
-            </Suspense>
-            <Suspense
-              fallback={
-                <div className="flex h-full w-full items-center justify-center">
-                  <LoaderPinwheel className="animate-spin" size={36} />
-                </div>
-              }
-            >
-              <BotTable />
-            </Suspense>
+            <div className="container mx-auto max-w-4xl p-4">
+              <Suspense
+                fallback={
+                  <div className="flex h-full w-full items-center justify-center">
+                    <LoaderPinwheel className="animate-spin" size={36} />
+                  </div>
+                }
+              >
+                <Summary />
+              </Suspense>
+              <Suspense
+                fallback={
+                  <div className="flex h-full w-full items-center justify-center">
+                    <LoaderPinwheel className="animate-spin" size={36} />
+                  </div>
+                }
+              >
+                <BotTable />
+              </Suspense>
+            </div>
           </SidebarInset>
         </SidebarProvider>
       </ThemeProvider>
