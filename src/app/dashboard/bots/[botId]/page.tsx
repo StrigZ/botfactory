@@ -6,24 +6,19 @@ import BotPage from '~/components/BotPage';
 import { SiteHeader } from '~/components/SiteHeader';
 import { SidebarInset, SidebarProvider } from '~/components/ui/sidebar';
 import { auth } from '~/server/auth';
-import { HydrateClient, api } from '~/trpc/server';
+import { HydrateClient } from '~/trpc/server';
 
 export default async function Page({
   params,
 }: {
   params: Promise<{ botId: string }>;
 }) {
-  const { botId } = await params;
   const session = await auth();
-
   if (!session?.user) {
     redirect('/');
   }
 
-  void api.bot.getById.prefetch(
-    { id: botId, withComponents: true },
-    { queryHash: 'botToUpdate' },
-  );
+  const { botId } = await params;
 
   return (
     <HydrateClient>

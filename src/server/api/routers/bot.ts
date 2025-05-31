@@ -123,7 +123,7 @@ export const botRouter = createTRPCRouter({
     }),
   ),
   getById: protectedProcedure
-    .input(z.object({ id: z.string().min(1), withComponents: z.boolean() }))
+    .input(z.object({ id: z.string().min(1) }))
     .query(async ({ ctx, input }) =>
       ctx.db.query.bots.findFirst({
         where({ id, createdById }, { eq, and }) {
