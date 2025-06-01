@@ -7,17 +7,21 @@ import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
 
-export type MessageNode = Node<{ message: string }, 'message'>;
+export type InputNode = Node<
+  { message: string; variableName: string },
+  'input'
+>;
 
-export default function MessageNode({ data }: NodeProps<MessageNode>) {
+export default function InputNode({ data }: NodeProps<InputNode>) {
   const [message, setMessage] = useState(data.message);
+  const [variableName, setVariableName] = useState(data.variableName);
 
   return (
     <>
       <Handle type="target" position={Position.Top} />
       <Card>
         <CardHeader>
-          <CardTitle>Message Node</CardTitle>
+          <CardTitle>Input Node</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-1">
           <Label htmlFor="text">Text:</Label>
@@ -27,7 +31,16 @@ export default function MessageNode({ data }: NodeProps<MessageNode>) {
             onChange={(e) => setMessage(e.target.value)}
             value={message}
             className="nodrag"
-            placeholder="Hello! Place your order:!"
+            placeholder="What is your name?"
+          />
+          <Label htmlFor="text">Variable Name:</Label>
+          <Input
+            id="text"
+            name="text"
+            onChange={(e) => setVariableName(e.target.value)}
+            value={variableName}
+            className="nodrag"
+            placeholder="userName"
           />
         </CardContent>
       </Card>

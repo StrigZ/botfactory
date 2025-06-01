@@ -14,6 +14,10 @@ export default function BotPage({ botId }: Props) {
     id: botId,
   });
 
+  const [workflowData] = api.bot.getWorkflow.useSuspenseQuery({
+    id: botId,
+  });
+
   return (
     <div className="flex h-full overflow-hidden">
       <div className="min-w-xs p-8">
@@ -21,7 +25,7 @@ export default function BotPage({ botId }: Props) {
           <CreateOrUpdateForm botData={botData} isLoading={isLoading} />
         </Suspense>
       </div>
-      <Workflow />
+      <Workflow workflow={workflowData} />
     </div>
   );
 }

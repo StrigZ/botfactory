@@ -137,3 +137,17 @@
 .landing__section-inner {
   @apply container flex flex-col gap-4 text-center;
 }
+
+/* Remove default input node styling */
+.react-flow__node-input {
+  padding: 0;
+  border: unset;
+  width: unset;
+  font-size: unset;
+  border-radius: unset;
+  text-align: unset;
+  background-color: unset;
+}
+.react-flow__node-input {
+  box-shadow: none !important;
+}

@@ -17,44 +17,39 @@ import {
 import { useTheme } from 'next-themes';
 import { useCallback, useState } from 'react';
 
+import type { BotWorkflowWithNodesAndEdges } from '~/lib/telegram/bot-service';
+
+import InputNode from './nodes/InputNode';
 import MessageNode from './nodes/MessageNode';
 
 const nodeTypes = {
   message: MessageNode,
+  input: InputNode,
 };
 
-const initialNodes: Node[] = [
-  {
-    id: 'node-1',
-    type: 'message',
-    position: { x: 0, y: 0 },
-    data: { value: 123 },
-  },
-  {
-    id: 'node-2',
-    type: 'output',
-    targetPosition: Position.Top,
-    position: { x: 0, y: 200 },
-    data: { label: 'node 2' },
-  },
-  {
-    id: 'node-3',
-    type: 'output',
-    targetPosition: Position.Top,
-    position: { x: 200, y: 200 },
-    data: { label: 'node 3' },
-  },
-];
+type Props = {
+  workflow: BotWorkflowWithNodesAndEdges;
+};
 
-const initialEdges: Edge[] = [
-  { id: 'edge-1', source: 'node-1', target: 'node-2', sourceHandle: 'a' },
-  { id: 'edge-2', source: 'node-1', target: 'node-3', sourceHandle: 'b' },
-];
+const getNodes = (workflow: BotWorkflowWithNodesAndEdges): Node[] =>
+  workflow.workflowNodes.map((node) => ({
+    id: node.id,
+    position: node.position as { x: number; y: number },
+    data: node.data as Record<string, string>,
+    type: node.type,
+  }));
 
-type Props = {};
-export default function Workflow({}: Props) {
-  const [nodes, setNodes] = useState(initialNodes);
-  const [edges, setEdges] = useState(initialEdges);
+const getEdges = (workflow: BotWorkflowWithNodesAndEdges): Edge[] =>
+  workflow.workflowEdges.map((edge) => ({
+    id: edge.id,
+    source: edge.sourceId,
+    target: edge.targetId,
+    animated: true,
+  }));
+
+export default function Workflow({ workflow }: Props) {
+  const [nodes, setNodes] = useState(getNodes(workflow));
+  const [edges, setEdges] = useState(getEdges(workflow));
   const { theme } = useTheme();
   const onNodesChange: OnNodesChange = useCallback(
     (changes) => setNodes((nds) => applyNodeChanges(changes, nds)),
