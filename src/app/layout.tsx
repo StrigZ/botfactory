@@ -1,3 +1,4 @@
+import '@xyflow/react/dist/style.css';
 import { type Metadata } from 'next';
 import { SessionProvider } from 'next-auth/react';
 import { Geist } from 'next/font/google';

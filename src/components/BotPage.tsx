@@ -6,6 +6,7 @@ import { api } from '~/trpc/react';
 
 import CreateOrUpdateForm from './CreateOrUpdateForm';
 import LoadingSpinner from './LoadingSpinner';
+import Workflow from './Workflow/Workflow';
 
 type Props = { botId: string };
 export default function BotPage({ botId }: Props) {
@@ -20,7 +21,7 @@ export default function BotPage({ botId }: Props) {
           <CreateOrUpdateForm botData={botData} isLoading={isLoading} />
         </Suspense>
       </div>
-      <div className="flex-1 bg-red-300"></div>
+      <Workflow />
     </div>
   );
 }
