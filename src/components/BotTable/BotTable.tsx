@@ -10,7 +10,7 @@ export default function BotTable({}: Props) {
   const [data] = api.bot.getAll.useSuspenseQuery();
 
   return (
-    <div className="container mx-auto py-10">
+    <div className="py-10">
       <DataTable columns={columns} data={data} />
     </div>
   );

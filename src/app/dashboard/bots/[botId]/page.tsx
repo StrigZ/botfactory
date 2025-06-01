@@ -6,7 +6,7 @@ import BotPage from '~/components/BotPage';
 import { SiteHeader } from '~/components/SiteHeader';
 import { SidebarInset, SidebarProvider } from '~/components/ui/sidebar';
 import { auth } from '~/server/auth';
-import { HydrateClient } from '~/trpc/server';
+import { HydrateClient, api } from '~/trpc/server';
 
 export default async function Page({
   params,
@@ -19,6 +19,7 @@ export default async function Page({
   }
 
   const { botId } = await params;
+  await api.bot.getById.prefetch({ id: botId });
 
   return (
     <HydrateClient>

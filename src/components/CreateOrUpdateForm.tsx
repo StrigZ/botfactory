@@ -111,9 +111,10 @@ export default function CreateOrUpdateForm({ botData, isLoading }: Props) {
     }, 2000);
   };
 
-  if (isLoading) {
-    return <LoadingSpinner />;
-  }
+  // if (isLoading) {
+  //   return <LoadingSpinner />;
+  // }
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
