@@ -146,6 +146,8 @@ export const workflowNodes = createTable('workflow_node', (d) => ({
 }));
 
 export type WorkflowNode = InferSelectModel<typeof workflowNodes>;
+export const nodeUpdateSchema = createUpdateSchema(workflowNodes);
+export const nodeInsertSchema = createInsertSchema(workflowNodes);
 
 // Edges (connections between nodes)
 export const workflowEdges = createTable('workflow_edge', (d) => ({
@@ -166,13 +168,13 @@ export const workflowEdges = createTable('workflow_edge', (d) => ({
     .text('workflow_id')
     .notNull()
     .references(() => botWorkflows.id, { onDelete: 'cascade' }),
-  name: d.text('name'),
-  condition: d.json('condition'),
   createdAt: d.timestamp('created_at').defaultNow().notNull(),
   updatedAt: d.timestamp('updated_at').defaultNow().notNull(),
 }));
 
 export type WorkflowEdge = InferSelectModel<typeof workflowEdges>;
+export const edgeUpdateSchema = createUpdateSchema(workflowEdges);
+export const edgeInsertSchema = createInsertSchema(workflowEdges);
 
 // Deployments history
 export const botDeployments = createTable('bot_deployment', (d) => ({

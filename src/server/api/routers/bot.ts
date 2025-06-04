@@ -131,39 +131,6 @@ export const botRouter = createTRPCRouter({
         },
       }),
     ),
-  getWorkflow: protectedProcedure
-    .input(z.object({ id: z.string().min(1) }))
-    .query(async ({ ctx, input }) => {
-      const botData = await ctx.db.query.bots.findFirst({
-        where({ id, createdById }, { eq, and }) {
-          return and(eq(createdById, ctx.session.user.id), eq(id, input.id));
-        },
-        with: { botWorkflowsToBots: true },
-      });
-
-      if (!botData) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Bot with this id does not exist',
-        });
-      }
-
-      const workflowData = await ctx.db.query.botWorkflows.findFirst({
-        where({ id }, { eq }) {
-          return eq(id, botData.botWorkflowsToBots.botWorkflowId);
-        },
-        with: { workflowEdges: true, workflowNodes: true },
-      });
-
-      if (!workflowData) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Bot is not properly configured.',
-        });
-      }
-
-      return workflowData;
-    }),
   update: protectedProcedure
     .input(
       z.object({

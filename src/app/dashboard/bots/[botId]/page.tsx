@@ -20,7 +20,7 @@ export default async function Page({
 
   const { botId } = await params;
   await api.bot.getById.prefetch({ id: botId });
-  await api.bot.getWorkflow.prefetch({ id: botId });
+  await api.workflow.getByBotId.prefetch({ id: botId });
 
   return (
     <HydrateClient>

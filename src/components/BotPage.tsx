@@ -14,7 +14,7 @@ export default function BotPage({ botId }: Props) {
     id: botId,
   });
 
-  const [workflowData] = api.bot.getWorkflow.useSuspenseQuery({
+  const [workflowData] = api.workflow.getByBotId.useSuspenseQuery({
     id: botId,
   });
 
