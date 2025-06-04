@@ -133,6 +133,7 @@ export const workflowNodes = createTable('workflow_node', (d) => ({
     .notNull()
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
+  flowId: d.varchar({ length: 255 }).notNull(),
   type: nodeTypeEnum('type').notNull(),
   name: d.text('name').notNull(),
   workflowId: d

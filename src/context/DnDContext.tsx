@@ -1,32 +1,59 @@
 'use client';
 
-import {
-  type ReactNode,
-  createContext,
-  useContext,
-  useMemo,
-  useState,
-} from 'react';
+import { DndContext, type DragEndEvent } from '@dnd-kit/core';
+import { type Node } from '@xyflow/react';
+import { type ReactNode, createContext, useCallback } from 'react';
 
 import type { NodeType } from '~/server/db/schema';
 
-type DnDContext = { type: NodeType | null; setType: (type: NodeType) => void };
+import { useReactFlowContext } from './ReactFlowContext';
+
+type DnDContext = {
+  draggedNodeType: NodeType | null;
+  setDraggedNodeType: (type: NodeType) => void;
+};
 
 const DnDContext = createContext<DnDContext>({
-  type: null,
-  setType: () => {
+  draggedNodeType: null,
+  setDraggedNodeType: () => {
     //
   },
 });
 
-export const useDnDContext = () => useContext(DnDContext);
+export default function DnDContextProvider({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  const { createNewFlowNode } = useReactFlowContext();
 
-export const DnDContextProvider = ({ children }: { children: ReactNode }) => {
-  const [type, setType] = useState<DnDContext['type']>(null);
+  const onDragEnd = useCallback(
+    (e: DragEndEvent) => {
+      const { active, over, activatorEvent, delta } = e;
+      if (!active.data.current || !over) return;
 
-  const value: DnDContext = useMemo(() => ({ type, setType }), [type]);
+      // add new node to the flow, but how???
+      // Check if activatorEvent is a pointer/mouse event
 
-  return <DnDContext.Provider value={value}>{children}</DnDContext.Provider>;
-};
+      if (
+        activatorEvent &&
+        'clientX' in activatorEvent &&
+        'clientY' in activatorEvent
+      ) {
+        const clientX = activatorEvent.clientX as number;
+        const clientY = activatorEvent.clientY as number;
+        const data = active.data.current as { data: Node; type: NodeType };
+        if (!data) return;
+        createNewFlowNode(
+          // TODO:
+          // @ts-expect-error Figure out how to type draggable object's data
+          { type: data.type, data: data.data },
+          { x: clientX + delta.x, y: clientY + delta.y },
+        );
+      }
+    },
+    [createNewFlowNode],
+  );
 
-export default DnDContext;
+  return <DndContext onDragEnd={onDragEnd}>{children}</DndContext>;
+}

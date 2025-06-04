@@ -1,9 +1,11 @@
 import { TRPCError } from '@trpc/server';
+import type { Node } from '@xyflow/react';
 import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { createTRPCRouter, protectedProcedure } from '~/server/api/trpc';
 import {
+  type WorkflowNode,
   botWorkflows,
   edgeInsertSchema,
   nodeInsertSchema,
@@ -28,6 +30,8 @@ export const workflowRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) =>
+      // TODO:
+      // @ts-expect-error Figure out how to type draggable object's data
       ctx.db.insert(workflowNodes).values({
         position: input.position,
         type: input.type,
@@ -104,6 +108,8 @@ export const workflowRouter = createTRPCRouter({
         });
       }
 
+      const nodeMap: Record<string, string> = {};
+
       await ctx.db.transaction(async (tx) => {
         await tx
           .delete(workflowEdges)
@@ -114,23 +120,43 @@ export const workflowRouter = createTRPCRouter({
           .where(eq(workflowNodes.workflowId, input.id));
 
         if (input.nodes.length) {
-          await tx.insert(workflowNodes).values(
-            input.nodes.map((node) => ({
-              workflowId: input.id,
-              name: node.name,
-              position: node.position,
-              type: node.type,
-              data: node.data,
-            })),
-          );
+          const dbNodes = await tx
+            .insert(workflowNodes)
+            .values(
+              input.nodes.map((node) => {
+                return {
+                  flowId: node.flowId,
+                  workflowId: input.id,
+                  name: node.name,
+                  position: node.position,
+                  type: node.type,
+                  data: node.data,
+                };
+              }),
+            )
+            .returning();
+
+          dbNodes.forEach((dbNode) => (nodeMap[dbNode.flowId] = dbNode.id));
         }
+
         if (input.edges.length) {
           await tx.insert(workflowEdges).values(
-            input.edges.map((edge) => ({
-              sourceId: edge.sourceId,
-              targetId: edge.targetId,
-              workflowId: input.id,
-            })),
+            input.edges.map((edge) => {
+              const sourceId = nodeMap[edge.sourceId]!;
+              const targetId = nodeMap[edge.targetId]!;
+
+              if (!sourceId || !targetId) {
+                console.log(nodeMap);
+
+                tx.rollback();
+              }
+
+              return {
+                sourceId,
+                targetId,
+                workflowId: input.id,
+              };
+            }),
           );
         }
       });
