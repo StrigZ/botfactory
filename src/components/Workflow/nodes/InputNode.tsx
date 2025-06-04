@@ -1,7 +1,12 @@
 'use client';
 
-import { Handle, type Node, type NodeProps, Position } from '@xyflow/react';
-import { useState } from 'react';
+import {
+  Handle,
+  type Node,
+  type NodeProps,
+  Position,
+  useReactFlow,
+} from '@xyflow/react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card';
 import { Input } from '~/components/ui/input';
@@ -12,9 +17,27 @@ export type InputNode = Node<
   'input'
 >;
 
-export default function InputNode({ data }: NodeProps<InputNode>) {
-  const [message, setMessage] = useState(data.message);
-  const [variableName, setVariableName] = useState(data.variableName);
+export default function InputNode({ data, id }: NodeProps<InputNode>) {
+  const flowInstance = useReactFlow();
+
+  // TODO: there is probably way better way of doing this
+  const handleMessageChange = (text: string) => {
+    flowInstance.setNodes((nodes) =>
+      nodes.map((node) =>
+        node.id === id ? { ...node, data: { ...data, message: text } } : node,
+      ),
+    );
+  };
+  // TODO: there is probably way better way of doing this
+  const handleVariableChange = (variable: string) => {
+    flowInstance.setNodes((nodes) =>
+      nodes.map((node) =>
+        node.id === id
+          ? { ...node, data: { ...data, variableName: variable } }
+          : node,
+      ),
+    );
+  };
 
   return (
     <>
@@ -28,8 +51,8 @@ export default function InputNode({ data }: NodeProps<InputNode>) {
           <Input
             id="text"
             name="text"
-            onChange={(e) => setMessage(e.target.value)}
-            value={message}
+            onChange={(e) => handleMessageChange(e.target.value)}
+            value={data.message}
             className="nodrag"
             placeholder="What is your name?"
           />
@@ -37,8 +60,8 @@ export default function InputNode({ data }: NodeProps<InputNode>) {
           <Input
             id="text"
             name="text"
-            onChange={(e) => setVariableName(e.target.value)}
-            value={variableName}
+            onChange={(e) => handleVariableChange(e.target.value)}
+            value={data.variableName}
             className="nodrag"
             placeholder="userName"
           />
