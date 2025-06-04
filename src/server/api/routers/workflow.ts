@@ -6,9 +6,8 @@ import { createTRPCRouter, protectedProcedure } from '~/server/api/trpc';
 import {
   botWorkflows,
   edgeInsertSchema,
-  edgeUpdateSchema,
   nodeInsertSchema,
-  nodeUpdateSchema,
+  nodeTypeEnum,
   workflowEdges,
   workflowNodes,
 } from '~/server/db/schema';
@@ -18,6 +17,38 @@ export const workflowRouter = createTRPCRouter({
     .input(z.object({ name: z.string().min(1), token: z.string().min(1) }))
     .mutation(async ({ ctx, input }) =>
       ctx.db.insert(botWorkflows).values({ name: input.name }),
+    ),
+  createNode: protectedProcedure
+    .input(
+      z.object({
+        workflowId: z.string().min(1),
+        name: z.string().min(1),
+        position: z.object({ x: z.number(), y: z.number() }),
+        type: z.enum(nodeTypeEnum.enumValues),
+      }),
+    )
+    .mutation(async ({ ctx, input }) =>
+      ctx.db.insert(workflowNodes).values({
+        position: input.position,
+        type: input.type,
+        workflowId: input.workflowId,
+        name: input.name,
+      }),
+    ),
+  createEdge: protectedProcedure
+    .input(
+      z.object({
+        workflowId: z.string().min(1),
+        sourceId: z.string().min(1),
+        targetId: z.string().min(1),
+      }),
+    )
+    .mutation(async ({ ctx, input }) =>
+      ctx.db.insert(workflowEdges).values({
+        sourceId: input.sourceId,
+        targetId: input.targetId,
+        workflowId: input.workflowId,
+      }),
     ),
   getByBotId: protectedProcedure
     .input(z.object({ id: z.string().min(1) }))

@@ -10,23 +10,24 @@ import {
   type OnNodesChange,
   Panel,
   ReactFlow,
-  type ReactFlowInstance,
   addEdge,
   applyEdgeChanges,
   applyNodeChanges,
+  useReactFlow,
 } from '@xyflow/react';
-// import { useTheme } from 'next-themes';
-import { useCallback, useState } from 'react';
+import { type DragEvent, useCallback, useState } from 'react';
 
+import { useDnDContext } from '~/context/DnDContext';
 import type { BotWorkflowWithNodesAndEdges } from '~/lib/telegram/bot-service';
 import type { NodeType } from '~/server/db/schema';
 import { api } from '~/trpc/react';
 
 import { Button } from '../ui/button';
+import DraggableNode from './DraggableNode';
 import InputNode from './nodes/InputNode';
 import MessageNode from './nodes/MessageNode';
 
-const nodeTypes = {
+export const nodeTypes = {
   message: MessageNode,
   input: InputNode,
 };
@@ -54,11 +55,9 @@ const getEdges = (workflow: BotWorkflowWithNodesAndEdges): Edge[] =>
 export default function Workflow({ workflow }: Props) {
   const [nodes, setNodes] = useState(getNodes(workflow));
   const [edges, setEdges] = useState(getEdges(workflow));
-  const [flowInstance, setFlowInstance] = useState<ReactFlowInstance | null>(
-    null,
-  );
-  // const { theme } = useTheme();
 
+  const { toObject, screenToFlowPosition } = useReactFlow();
+  const { type, setType } = useDnDContext();
   const updateWorkflow = api.workflow.update.useMutation();
 
   const onNodesChange: OnNodesChange = useCallback(
@@ -76,53 +75,91 @@ export default function Workflow({ workflow }: Props) {
   );
 
   const onSave = useCallback(() => {
-    if (flowInstance) {
-      const flow = flowInstance.toObject();
-      console.log(flow);
+    const flow = toObject();
 
-      updateWorkflow.mutate({
-        id: workflow.id,
-        edges: flow.edges.map((edge) => ({
-          sourceId: edge.source,
-          targetId: edge.target,
-          workflowId: workflow.id,
-        })),
-        nodes: flow.nodes.map((node) => ({
-          name: 'not implemented',
-          position: node.position,
-          type: node.type as NodeType,
-          workflowId: workflow.id,
-          data: node.data,
-        })),
+    updateWorkflow.mutate({
+      id: workflow.id,
+      edges: flow.edges.map((edge) => ({
+        sourceId: edge.source,
+        targetId: edge.target,
+        workflowId: workflow.id,
+      })),
+      nodes: flow.nodes.map((node) => ({
+        name: 'not implemented',
+        position: node.position,
+        type: node.type as NodeType,
+        workflowId: workflow.id,
+        data: node.data,
+      })),
+    });
+  }, [toObject, updateWorkflow, workflow.id]);
+
+  const onDrop = useCallback(
+    (event: DragEvent<HTMLDivElement>) => {
+      event.preventDefault();
+
+      // check if the dropped element is valid
+      if (!type) {
+        return;
+      }
+
+      // project was renamed to screenToFlowPosition
+      // and you don't need to subtract the reactFlowBounds.left/top anymore
+      // details: https://reactflow.dev/whats-new/2023-11-10
+      const position = screenToFlowPosition({
+        x: event.clientX,
+        y: event.clientY,
       });
-    }
-  }, [flowInstance, updateWorkflow, workflow.id]);
+      const newNode = {
+        id: crypto.randomUUID(),
+        type,
+        position,
+        data: { label: `${type} node` },
+      };
+
+      setNodes((nds) => nds.concat(newNode));
+    },
+    [screenToFlowPosition, type],
+  );
+
+  const onDragStart = (
+    event: DragEvent<HTMLDivElement>,
+    nodeType: NodeType,
+  ) => {
+    setType(nodeType);
+    event.dataTransfer.setData('text/plain', nodeType);
+    event.dataTransfer.effectAllowed = 'move';
+  };
+
+  const onDragOver = useCallback((event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+  }, []);
 
   return (
-    <div className="flex-1 border border-dashed bg-gray-300">
+    <div className="relative flex-1 border border-dashed bg-gray-300">
       <ReactFlow
-        // colorMode={theme as 'dark' | 'light'}
         nodes={nodes}
-        onInit={setFlowInstance}
         onNodesChange={onNodesChange}
         edges={edges}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         fitView
         nodeTypes={nodeTypes}
+        onDrop={onDrop}
+        // onDragStart={onDragStart}
+        onDragOver={onDragOver}
       >
         <Background />
         <Controls />
         <Panel position="top-right">
           <Button onClick={onSave}>save</Button>
-          {/* <Button className="xy-theme__button" onClick={onRestore}>
-            restore
-          </Button> */}
-          {/* <button className="xy-theme__button" onClick={onAdd}>
-            add node
-          </button> */}
         </Panel>
       </ReactFlow>
+      <div className="bg-muted absolute top-4 left-1/2 flex w-3/4 -translate-x-1/2 items-center gap-2 rounded-lg p-4">
+        <DraggableNode id="message" label="Message" type="message" />
+        <DraggableNode id="input" label="Input" type="input" />
+      </div>
     </div>
   );
 }

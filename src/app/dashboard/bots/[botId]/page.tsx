@@ -1,3 +1,4 @@
+import { ReactFlowProvider } from '@xyflow/react';
 import { ThemeProvider } from 'next-themes';
 import { redirect } from 'next/navigation';
 
@@ -5,6 +6,7 @@ import { AppSidebar } from '~/components/AppSidebar';
 import BotPage from '~/components/BotPage';
 import { SiteHeader } from '~/components/SiteHeader';
 import { SidebarInset, SidebarProvider } from '~/components/ui/sidebar';
+import DnDContext, { DnDContextProvider } from '~/context/DnDContext';
 import { auth } from '~/server/auth';
 import { HydrateClient, api } from '~/trpc/server';
 
@@ -41,7 +43,11 @@ export default async function Page({
           <AppSidebar variant="inset" />
           <SidebarInset>
             <SiteHeader />
-            <BotPage botId={botId} />
+            <DnDContextProvider>
+              <ReactFlowProvider>
+                <BotPage botId={botId} />
+              </ReactFlowProvider>
+            </DnDContextProvider>
           </SidebarInset>
         </SidebarProvider>
       </ThemeProvider>
