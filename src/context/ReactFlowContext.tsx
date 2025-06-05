@@ -95,7 +95,6 @@ export default function ReactFlowContextProvider({
   const [workflow] = api.workflow.getByBotId.useSuspenseQuery({
     id: botId,
   });
-  const createNode = api.workflow.createNode.useMutation();
 
   const [nodes, setNodes] = useState<ReactFlowContext['nodes']>(
     getNodes(workflow),

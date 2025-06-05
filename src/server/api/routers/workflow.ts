@@ -1,11 +1,9 @@
 import { TRPCError } from '@trpc/server';
-import type { Node } from '@xyflow/react';
 import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { createTRPCRouter, protectedProcedure } from '~/server/api/trpc';
 import {
-  type WorkflowNode,
   botWorkflows,
   edgeInsertSchema,
   nodeInsertSchema,
@@ -108,7 +106,7 @@ export const workflowRouter = createTRPCRouter({
         });
       }
 
-      const nodeMap: Record<string, string> = {};
+      const flowIdToDbIdMap = new Map<string, string>();
 
       await ctx.db.transaction(async (tx) => {
         await tx
@@ -120,44 +118,47 @@ export const workflowRouter = createTRPCRouter({
           .where(eq(workflowNodes.workflowId, input.id));
 
         if (input.nodes.length) {
-          const dbNodes = await tx
+          // Create and return new nodes in DB
+          const insertedNodes = await tx
             .insert(workflowNodes)
             .values(
-              input.nodes.map((node) => {
+              input.nodes.map((inputNode) => {
                 return {
-                  flowId: node.flowId,
+                  flowId: inputNode.flowId,
                   workflowId: input.id,
-                  name: node.name,
-                  position: node.position,
-                  type: node.type,
-                  data: node.data,
+                  name: inputNode.name,
+                  position: inputNode.position,
+                  type: inputNode.type,
+                  data: inputNode.data,
                 };
               }),
             )
             .returning();
 
-          dbNodes.forEach((dbNode) => (nodeMap[dbNode.flowId] = dbNode.id));
+          // Save each node's flow id and db id in the map
+          insertedNodes.forEach((dbNode) =>
+            flowIdToDbIdMap.set(dbNode.flowId, dbNode.id),
+          );
         }
 
         if (input.edges.length) {
-          await tx.insert(workflowEdges).values(
-            input.edges.map((edge) => {
-              const sourceId = nodeMap[edge.sourceId]!;
-              const targetId = nodeMap[edge.targetId]!;
+          const validEdges = input.edges
+            .map((inputEdge) => {
+              // Get node's db id by flow id from the map
+              const sourceId = flowIdToDbIdMap.get(inputEdge.sourceId);
+              const targetId = flowIdToDbIdMap.get(inputEdge.targetId);
 
-              if (!sourceId || !targetId) {
-                console.log(nodeMap);
+              return sourceId && targetId
+                ? {
+                    sourceId,
+                    targetId,
+                    workflowId: input.id,
+                  }
+                : null;
+            })
+            .filter((edge): edge is NonNullable<typeof edge> => edge !== null);
 
-                tx.rollback();
-              }
-
-              return {
-                sourceId,
-                targetId,
-                workflowId: input.id,
-              };
-            }),
-          );
+          await tx.insert(workflowEdges).values(validEdges);
         }
       });
     }),

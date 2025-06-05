@@ -32,25 +32,16 @@ export default function DnDContextProvider({
       const { active, over, activatorEvent, delta } = e;
       if (!active.data.current || !over) return;
 
-      // add new node to the flow, but how???
-      // Check if activatorEvent is a pointer/mouse event
+      const { clientX, clientY } = activatorEvent as PointerEvent;
 
-      if (
-        activatorEvent &&
-        'clientX' in activatorEvent &&
-        'clientY' in activatorEvent
-      ) {
-        const clientX = activatorEvent.clientX as number;
-        const clientY = activatorEvent.clientY as number;
-        const data = active.data.current as { data: Node; type: NodeType };
-        if (!data) return;
-        createNewFlowNode(
-          // TODO:
-          // @ts-expect-error Figure out how to type draggable object's data
-          { type: data.type, data: data.data },
-          { x: clientX + delta.x, y: clientY + delta.y },
-        );
-      }
+      const data = active.data.current as { data: Node; type: NodeType };
+      if (!data) return;
+      createNewFlowNode(
+        // TODO:
+        // @ts-expect-error Figure out how to type draggable object's data
+        { type: data.type, data: data.data },
+        { x: clientX + delta.x, y: clientY + delta.y },
+      );
     },
     [createNewFlowNode],
   );
