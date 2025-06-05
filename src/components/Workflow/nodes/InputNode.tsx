@@ -52,7 +52,7 @@ export default function InputNode({ data, id }: NodeProps<InputNode>) {
             id="text"
             name="text"
             onChange={(e) => handleMessageChange(e.target.value)}
-            value={data.message}
+            value={data.message ?? ''}
             className="nodrag"
             placeholder="What is your name?"
           />
@@ -61,7 +61,7 @@ export default function InputNode({ data, id }: NodeProps<InputNode>) {
             id="text"
             name="text"
             onChange={(e) => handleVariableChange(e.target.value)}
-            value={data.variableName}
+            value={data.variableName ?? ''}
             className="nodrag"
             placeholder="userName"
           />

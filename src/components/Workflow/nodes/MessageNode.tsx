@@ -39,7 +39,7 @@ export default function MessageNode({ data, id }: NodeProps<MessageNode>) {
             id="text"
             name="text"
             onChange={(e) => handleMessageChange(e.target.value)}
-            value={data.message}
+            value={data.message ?? ''}
             className="nodrag"
             placeholder="Hello! Place your order:!"
           />

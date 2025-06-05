@@ -1,9 +1,9 @@
 'use client';
 
 import { DndContext, type DragEndEvent } from '@dnd-kit/core';
-import { type Node } from '@xyflow/react';
 import { type ReactNode, createContext, useCallback } from 'react';
 
+import type { DraggableNodeData } from '~/components/Workflow/DraggableNode';
 import type { NodeType } from '~/server/db/schema';
 
 import { useReactFlowContext } from './ReactFlowContext';
@@ -34,14 +34,12 @@ export default function DnDContextProvider({
 
       const { clientX, clientY } = activatorEvent as PointerEvent;
 
-      const data = active.data.current as { data: Node; type: NodeType };
-      if (!data) return;
-      createNewFlowNode(
-        // TODO:
-        // @ts-expect-error Figure out how to type draggable object's data
-        { type: data.type, data: data.data },
-        { x: clientX + delta.x, y: clientY + delta.y },
-      );
+      const draggableNodeData = active.data.current as DraggableNodeData;
+      if (!draggableNodeData) return;
+      createNewFlowNode(draggableNodeData, {
+        x: clientX + delta.x,
+        y: clientY + delta.y,
+      });
     },
     [createNewFlowNode],
   );

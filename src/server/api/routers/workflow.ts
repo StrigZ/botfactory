@@ -18,25 +18,6 @@ export const workflowRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) =>
       ctx.db.insert(botWorkflows).values({ name: input.name }),
     ),
-  createNode: protectedProcedure
-    .input(
-      z.object({
-        workflowId: z.string().min(1),
-        name: z.string().min(1),
-        position: z.object({ x: z.number(), y: z.number() }),
-        type: z.enum(nodeTypeEnum.enumValues),
-      }),
-    )
-    .mutation(async ({ ctx, input }) =>
-      // TODO:
-      // @ts-expect-error Figure out how to type draggable object's data
-      ctx.db.insert(workflowNodes).values({
-        position: input.position,
-        type: input.type,
-        workflowId: input.workflowId,
-        name: input.name,
-      }),
-    ),
   createEdge: protectedProcedure
     .input(
       z.object({

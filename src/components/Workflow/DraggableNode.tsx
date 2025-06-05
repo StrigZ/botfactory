@@ -10,6 +10,9 @@ export type DraggableNodeProps = {
   type: keyof typeof nodeTypes;
   label: string;
 };
+
+export type DraggableNodeData = DraggableNodeProps;
+
 export default function DraggableNode({ id, type, label }: DraggableNodeProps) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id,

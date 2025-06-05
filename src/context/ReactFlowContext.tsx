@@ -21,6 +21,7 @@ import {
   useState,
 } from 'react';
 
+import type { DraggableNodeData } from '~/components/Workflow/DraggableNode';
 import type { BotWorkflowWithNodesAndEdges } from '~/lib/telegram/bot-service';
 import type { NodeType } from '~/server/db/schema';
 import { api } from '~/trpc/react';
@@ -35,10 +36,7 @@ type ReactFlowContext = {
   onConnect: OnConnect;
   onSave: () => void;
   createNewFlowNode: (
-    data: {
-      data: { type: NodeType; data: Node };
-      position: { x: number; y: number };
-    },
+    data: DraggableNodeData,
     position: { x: number; y: number },
   ) => void;
 };
@@ -151,14 +149,14 @@ export default function ReactFlowContextProvider({
     });
   }, [flowInstance, updateWorkflow, workflow.id]);
 
-  const createNewFlowNode = useCallback(
-    async (data: Node, position: { x: number; y: number }) => {
+  const createNewFlowNode: ReactFlowContext['createNewFlowNode'] = useCallback(
+    (data, position) => {
       const flowPosition = flowInstance?.screenToFlowPosition(position);
       if (!flowPosition) return;
 
       const newFlowNode: Node = {
         id: crypto.randomUUID(),
-        data: { ...data.data, message: '' },
+        data: {},
         type: data.type,
         position: flowPosition,
       };
@@ -167,8 +165,6 @@ export default function ReactFlowContextProvider({
     },
     [flowInstance],
   );
-  // TODO:
-  // @ts-expect-error Figure out how to type draggable object's data
   const value: ReactFlowContext = useMemo(
     () => ({
       edges,
