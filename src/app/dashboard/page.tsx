@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
 
 import { AppSidebar } from '~/components/AppSidebar';
-import BotTable from '~/components/BotTable/BotTable';
+import BotTable from '~/components/DashboardPage/BotTable/BotTable';
 import LoadingSpinner from '~/components/LoadingSpinner';
 import { SiteHeader } from '~/components/SiteHeader';
 import Summary from '~/components/Summary';

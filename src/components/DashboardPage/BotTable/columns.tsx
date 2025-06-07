@@ -4,11 +4,10 @@ import type { ColumnDef } from '@tanstack/react-table';
 import { ArrowUpDown, Circle, SquareArrowOutUpRight } from 'lucide-react';
 import Link from 'next/link';
 
+import { Button, buttonVariants } from '~/components/ui/button';
 import { cn } from '~/lib/utils';
 import type { Bot, BotStatus } from '~/server/db/schema';
 import { api } from '~/trpc/react';
-
-import { Button, buttonVariants } from '../ui/button';
 
 export const columns: ColumnDef<Bot>[] = [
   {
