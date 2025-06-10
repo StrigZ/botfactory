@@ -36,6 +36,8 @@ export const columns: ColumnDef<Bot>[] = [
             return 'Active';
           case 'paused':
             return 'Paused';
+          case 'draft':
+            return 'Draft';
           default:
             break;
         }
@@ -46,7 +48,8 @@ export const columns: ColumnDef<Bot>[] = [
           <Circle
             className={cn({
               'animate-pulse fill-green-300': status === 'published',
-              'fill-gray-300': status === 'paused',
+              'fill-orange-300': status === 'paused',
+              'fill-gray-300': status === 'draft',
             })}
             size={16}
           />

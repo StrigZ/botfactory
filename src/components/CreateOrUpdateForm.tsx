@@ -11,7 +11,6 @@ import { Button } from '~/components/ui/button';
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -26,11 +25,17 @@ import LoadingSpinner from './LoadingSpinner';
 
 type Props = {
   botData?: Bot;
+  isEditableByDefault?: boolean;
 };
-export default function CreateOrUpdateForm({ botData }: Props) {
+export default function CreateOrUpdateForm({
+  botData,
+  isEditableByDefault = false,
+}: Props) {
   const [isPending, setIsPending] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [isEditable, setIsEditable] = useState(false);
+  const [isEditable, setIsEditable] = useState(isEditableByDefault);
+
+  const doesBotExist = !!botData;
 
   const router = useRouter();
 
@@ -60,8 +65,8 @@ export default function CreateOrUpdateForm({ botData }: Props) {
   });
 
   const formSchema = z.object({
-    name: z.string().min(1),
-    token: z.string().min(1),
+    name: z.string().min(1, { message: 'Name is required!' }),
+    token: z.string().min(1, { message: 'Token is required!' }),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -74,7 +79,7 @@ export default function CreateOrUpdateForm({ botData }: Props) {
       return;
     }
 
-    if (botData) {
+    if (doesBotExist) {
       updateBot.mutate({
         name,
         token,
@@ -116,10 +121,6 @@ export default function CreateOrUpdateForm({ botData }: Props) {
     }, 2000);
   };
 
-  // if (isLoading) {
-  //   return <LoadingSpinner />;
-  // }
-
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
@@ -131,14 +132,11 @@ export default function CreateOrUpdateForm({ botData }: Props) {
               <FormLabel>Name</FormLabel>
               <FormControl>
                 <Input
-                  placeholder="T-shirt seller"
+                  placeholder="AI finance agent"
                   {...field}
                   disabled={!isEditable}
                 />
               </FormControl>
-              {isEditable && (
-                <FormDescription>The display name of the bot.</FormDescription>
-              )}
               <FormMessage />
             </FormItem>
           )}
@@ -156,9 +154,6 @@ export default function CreateOrUpdateForm({ botData }: Props) {
                   disabled={!isEditable}
                 />
               </FormControl>
-              {isEditable && (
-                <FormDescription>The token of the bot.</FormDescription>
-              )}
               <FormMessage />
             </FormItem>
           )}
@@ -173,15 +168,17 @@ export default function CreateOrUpdateForm({ botData }: Props) {
               {getSubmitButtonDisplayText()}
             </Button>
           )}
-          <Button
-            className="cursor-pointer"
-            type="button"
-            variant={!isEditable ? 'default' : 'destructive'}
-            onClick={() => setIsEditable((pv) => !pv)}
-            disabled={isPending}
-          >
-            {getEditButtonDisplayText()}
-          </Button>
+          {doesBotExist && (
+            <Button
+              className="cursor-pointer"
+              type="button"
+              variant={!isEditable ? 'default' : 'destructive'}
+              onClick={() => setIsEditable((pv) => !pv)}
+              disabled={isPending}
+            >
+              {getEditButtonDisplayText()}
+            </Button>
+          )}
         </div>
       </form>
     </Form>

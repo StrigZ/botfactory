@@ -15,7 +15,7 @@ export const nodeTypes = {
   input: InputNode,
 };
 
-export default function Workflow() {
+export default function Workflow({ isEnabled }: { isEnabled: boolean }) {
   const { setNodeRef: droppableRef } = useDroppable({ id: 'flow' });
 
   const {
@@ -28,7 +28,7 @@ export default function Workflow() {
     onSave,
   } = useReactFlowContext();
 
-  return (
+  return isEnabled ? (
     <div className="relative flex-1 border border-dashed bg-gray-300">
       <ReactFlow
         nodes={nodes}
@@ -51,6 +51,11 @@ export default function Workflow() {
         <DraggableNode id="message" label="Message" type="message" />
         <DraggableNode id="input" label="Input" type="input" />
       </div>
+    </div>
+  ) : (
+    <div className="relative flex flex-1 items-center justify-center border border-dashed bg-gray-300">
+      <p className="">Create bot before editing workflow!</p>
+      <div className="absolute inset-0 blur-md"></div>
     </div>
   );
 }

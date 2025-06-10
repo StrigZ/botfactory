@@ -21,10 +21,10 @@ export default function BotPage({ botId }: Props) {
     <div className="flex h-full overflow-hidden">
       <div className="min-w-xs p-8">
         <Suspense fallback={<LoadingSpinner />}>
-          <CreateOrUpdateForm botData={botData} />
+          <CreateOrUpdateForm botData={botData} isEditableByDefault={!botId} />
         </Suspense>
       </div>
-      <Workflow />
+      <Workflow isEnabled={!!botData} />
     </div>
   );
 }

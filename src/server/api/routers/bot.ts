@@ -5,7 +5,12 @@ import { z } from 'zod';
 import { BotDeploymentService } from '~/lib/telegram/bot-deployment';
 import { BotService } from '~/lib/telegram/bot-service';
 import { createTRPCRouter, protectedProcedure } from '~/server/api/trpc';
-import { bots } from '~/server/db/schema';
+import {
+  type Bot,
+  botWorkflows,
+  botWorkflowsToBots,
+  bots,
+} from '~/server/db/schema';
 
 export const botRouter = createTRPCRouter({
   create: protectedProcedure
@@ -25,17 +30,34 @@ export const botRouter = createTRPCRouter({
       }
 
       // Save new bot entry to DB
-      const [bot] = await ctx.db
-        .insert(bots)
-        .values({
-          name: input.name,
-          token: input.token,
-          createdById: ctx.session.user.id,
-          status: 'draft',
-        })
-        .returning();
+      let newBot: Bot | undefined;
+      await ctx.db.transaction(async (tx) => {
+        const [bot] = await tx
+          .insert(bots)
+          .values({
+            name: input.name,
+            token: input.token,
+            createdById: ctx.session.user.id,
+            status: 'draft',
+          })
+          .returning();
 
-      return bot;
+        const [newWorkflow] = await tx
+          .insert(botWorkflows)
+          .values({ name: 'New Workflow' })
+          .returning();
+
+        if (bot && newWorkflow) {
+          newBot = bot;
+          await tx
+            .insert(botWorkflowsToBots)
+            .values({ botId: bot?.id, botWorkflowId: newWorkflow?.id });
+        } else {
+          tx.rollback();
+        }
+      });
+
+      return newBot;
     }),
   deploy: protectedProcedure
     .input(z.object({ id: z.string() }))

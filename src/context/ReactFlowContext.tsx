@@ -85,21 +85,25 @@ const defaultNodes = [
 ];
 const defaultEdges = [{ id: '1-2', source: '1', target: '2' }];
 
-export const getNodes = (workflow: BotWorkflowWithNodesAndEdges): Node[] =>
-  workflow.workflowNodes.map((node) => ({
-    id: node.id,
-    position: node.position as { x: number; y: number },
-    data: node.data as Record<string, string>,
-    type: node.type,
-  }));
+export const getNodes = (workflow?: BotWorkflowWithNodesAndEdges): Node[] =>
+  workflow && workflow.workflowNodes.length > 0
+    ? workflow.workflowNodes.map((node) => ({
+        id: node.id,
+        position: node.position as { x: number; y: number },
+        data: node.data as Record<string, string>,
+        type: node.type,
+      }))
+    : defaultNodes;
 
-export const getEdges = (workflow: BotWorkflowWithNodesAndEdges): Edge[] =>
-  workflow.workflowEdges.map((edge) => ({
-    id: edge.id,
-    source: edge.sourceId,
-    target: edge.targetId,
-    animated: true,
-  }));
+export const getEdges = (workflow?: BotWorkflowWithNodesAndEdges): Edge[] =>
+  workflow && workflow.workflowNodes.length > 0
+    ? workflow.workflowEdges.map((edge) => ({
+        id: edge.id,
+        source: edge.sourceId,
+        target: edge.targetId,
+        animated: true,
+      }))
+    : defaultEdges;
 
 export default function ReactFlowContextProvider({
   botId,
@@ -116,10 +120,10 @@ export default function ReactFlowContextProvider({
   );
 
   const [nodes, setNodes] = useState<ReactFlowContext['nodes']>(
-    workflow ? getNodes(workflow) : defaultNodes,
+    getNodes(workflow),
   );
   const [edges, setEdges] = useState<ReactFlowContext['edges']>(
-    workflow ? getEdges(workflow) : defaultEdges,
+    getEdges(workflow),
   );
   const [flowInstance, setFlowInstance] = useState<ReactFlowInstance | null>(
     null,
