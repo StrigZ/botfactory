@@ -18,6 +18,7 @@ import {
 } from '@tabler/icons-react';
 import { Bot } from 'lucide-react';
 import { useSession } from 'next-auth/react';
+import Link from 'next/link';
 import * as React from 'react';
 
 import { NavDocuments } from '~/components/NavDocuments';
@@ -154,7 +155,7 @@ const data = {
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { data: session } = useSession();
   return (
-    <Sidebar collapsible="offcanvas" {...props}>
+    <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -162,10 +163,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               asChild
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
-              <a href="#">
+              <Link href="/dashboard">
                 <Bot className="!size-5" />
                 <span className="text-base font-semibold">Bot Factory</span>
-              </a>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

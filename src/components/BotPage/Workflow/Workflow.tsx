@@ -3,9 +3,9 @@
 import { useDroppable } from '@dnd-kit/core';
 import { Background, Controls, Panel, ReactFlow } from '@xyflow/react';
 
+import { Button } from '~/components/ui/button';
 import { useReactFlowContext } from '~/context/ReactFlowContext';
 
-import { Button } from '../ui/button';
 import DraggableNode from './DraggableNode';
 import InputNode from './nodes/InputNode';
 import MessageNode from './nodes/MessageNode';

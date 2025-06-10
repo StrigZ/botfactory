@@ -2,6 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Check } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -24,22 +25,26 @@ import { api } from '~/trpc/react';
 import LoadingSpinner from './LoadingSpinner';
 
 type Props = {
-  isLoading?: boolean;
   botData?: Bot;
 };
-export default function CreateOrUpdateForm({ botData, isLoading }: Props) {
+export default function CreateOrUpdateForm({ botData }: Props) {
   const [isPending, setIsPending] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [isEditable, setIsEditable] = useState(false);
+
+  const router = useRouter();
+
   const utils = api.useUtils();
   const createBot = api.bot.create.useMutation({
     onMutate: () => {
       setIsPending(true);
       showCheckmark();
     },
-    onSuccess: async () => {
+    onSuccess: async (data) => {
       await utils.bot.getAll.invalidate();
+
       setIsPending(false);
+      router.push(`/dashboard/bots/${data?.id}`);
     },
   });
   const updateBot = api.bot.update.useMutation({

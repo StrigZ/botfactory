@@ -63,6 +63,7 @@
   --spacing-10xl: calc(var(--spacing-base) * 40);
   --spacing-11xl: calc(var(--spacing-base) * 48);
 
+  --font-weight-*: initial;
   --font-weight-normal: 400;
   --font-weight-heavy: 600;
 }
@@ -146,16 +147,16 @@
 }
 
 .landing__section-outer {
-  @apply flex min-h-screen w-screen snap-center snap-always items-start justify-center bg-gradient-to-br pt-36;
+  @apply pt-9xl flex min-h-screen w-screen snap-center snap-always items-start justify-center bg-gradient-to-br;
 
   h1,
   h2 {
-    @apply text-4xl font-bold;
+    @apply font-heavy text-4xl;
   }
 }
 
 .landing__section-inner {
-  @apply container flex flex-col gap-4 text-center;
+  @apply gap-base container flex flex-col text-center;
 }
 
 /* Remove default input node styling */

@@ -3,7 +3,7 @@
 import { DndContext, type DragEndEvent } from '@dnd-kit/core';
 import { type ReactNode, createContext, useCallback } from 'react';
 
-import type { DraggableNodeData } from '~/components/Workflow/DraggableNode';
+import type { DraggableNodeData } from '~/components/BotPage/Workflow/DraggableNode';
 import type { NodeType } from '~/server/db/schema';
 
 import { useReactFlowContext } from './ReactFlowContext';

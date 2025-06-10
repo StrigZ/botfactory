@@ -21,7 +21,7 @@ import {
   useState,
 } from 'react';
 
-import type { DraggableNodeData } from '~/components/Workflow/DraggableNode';
+import type { DraggableNodeData } from '~/components/BotPage/Workflow/DraggableNode';
 import type { BotWorkflowWithNodesAndEdges } from '~/lib/telegram/bot-service';
 import type { NodeType } from '~/server/db/schema';
 import { api } from '~/trpc/react';
@@ -67,6 +67,24 @@ const ReactFlowContext = createContext<ReactFlowContext>({
 
 export const useReactFlowContext = () => useContext(ReactFlowContext);
 
+const defaultNodes = [
+  {
+    id: '1', // required
+    position: { x: 0, y: 0 }, // required
+    type: 'message',
+    data: {
+      message: 'I am the message node!',
+    },
+  },
+  {
+    id: '2', // required
+    position: { x: 250, y: 200 }, // required
+    type: 'input',
+    data: { message: 'I am the input node' }, // required
+  },
+];
+const defaultEdges = [{ id: '1-2', source: '1', target: '2' }];
+
 export const getNodes = (workflow: BotWorkflowWithNodesAndEdges): Node[] =>
   workflow.workflowNodes.map((node) => ({
     id: node.id,
@@ -87,18 +105,21 @@ export default function ReactFlowContextProvider({
   botId,
   children,
 }: {
-  botId: string;
+  botId?: string;
   children: ReactNode;
 }) {
-  const [workflow] = api.workflow.getByBotId.useSuspenseQuery({
-    id: botId,
-  });
+  const { data: workflow } = api.workflow.getByBotId.useQuery(
+    {
+      id: botId!,
+    },
+    { enabled: !!botId },
+  );
 
   const [nodes, setNodes] = useState<ReactFlowContext['nodes']>(
-    getNodes(workflow),
+    workflow ? getNodes(workflow) : defaultNodes,
   );
   const [edges, setEdges] = useState<ReactFlowContext['edges']>(
-    getEdges(workflow),
+    workflow ? getEdges(workflow) : defaultEdges,
   );
   const [flowInstance, setFlowInstance] = useState<ReactFlowInstance | null>(
     null,
@@ -131,23 +152,25 @@ export default function ReactFlowContextProvider({
     if (!flow) {
       return;
     }
-    updateWorkflow.mutate({
-      id: workflow.id,
-      edges: flow.edges.map((edge) => ({
-        sourceId: edge.source,
-        targetId: edge.target,
-        workflowId: workflow.id,
-      })),
-      nodes: flow.nodes.map((node) => ({
-        name: 'not implemented',
-        position: node.position,
-        type: node.type as NodeType,
-        workflowId: workflow.id,
-        data: node.data,
-        flowId: node.id,
-      })),
-    });
-  }, [flowInstance, updateWorkflow, workflow.id]);
+    if (workflow) {
+      updateWorkflow.mutate({
+        id: workflow.id,
+        edges: flow.edges.map((edge) => ({
+          sourceId: edge.source,
+          targetId: edge.target,
+          workflowId: workflow.id,
+        })),
+        nodes: flow.nodes.map((node) => ({
+          name: 'not implemented',
+          position: node.position,
+          type: node.type as NodeType,
+          workflowId: workflow.id,
+          data: node.data,
+          flowId: node.id,
+        })),
+      });
+    }
+  }, [flowInstance, updateWorkflow, workflow]);
 
   const createNewFlowNode: ReactFlowContext['createNewFlowNode'] = useCallback(
     (data, position) => {

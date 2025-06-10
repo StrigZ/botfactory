@@ -2,20 +2,19 @@ import { ThemeProvider } from 'next-themes';
 import { redirect } from 'next/navigation';
 
 import { AppSidebar } from '~/components/AppSidebar';
-import DashboardPage from '~/components/DashboardPage/DashboardPage';
+import BotPage from '~/components/BotPage/BotPage';
 import { SiteHeader } from '~/components/SiteHeader';
 import { SidebarInset, SidebarProvider } from '~/components/ui/sidebar';
+import DnDContextProvider from '~/context/DnDContext';
+import ReactFlowContextProvider from '~/context/ReactFlowContext';
 import { auth } from '~/server/auth';
-import { HydrateClient, api } from '~/trpc/server';
+import { HydrateClient } from '~/trpc/server';
 
 export default async function Page() {
   const session = await auth();
-
   if (!session?.user) {
     redirect('/');
   }
-
-  void api.bot.getAll.prefetch();
 
   return (
     <HydrateClient>
@@ -34,9 +33,13 @@ export default async function Page() {
           }
         >
           <AppSidebar variant="inset" />
-          <SidebarInset className="relative">
+          <SidebarInset>
             <SiteHeader />
-            <DashboardPage />
+            <ReactFlowContextProvider>
+              <DnDContextProvider>
+                <BotPage />
+              </DnDContextProvider>
+            </ReactFlowContextProvider>
           </SidebarInset>
         </SidebarProvider>
       </ThemeProvider>

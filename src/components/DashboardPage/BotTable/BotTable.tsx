@@ -1,17 +1,17 @@
 'use client';
 
-import { api } from '~/trpc/react';
+import type { Bot } from '~/server/db/schema';
 
 import { columns } from './columns';
 import { DataTable } from './data-table';
 
-type Props = {};
-export default function BotTable({}: Props) {
-  const [data] = api.bot.getAll.useSuspenseQuery();
-
+type Props = {
+  bots: Bot[];
+};
+export default function BotTable({ bots }: Props) {
   return (
     <div className="py-10">
-      <DataTable columns={columns} data={data} />
+      <DataTable columns={columns} data={bots} />
     </div>
   );
 }
