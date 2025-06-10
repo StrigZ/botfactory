@@ -14,6 +14,7 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -45,6 +46,25 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  --spacing-xs: calc(var(--spacing-base) * 0.25);
+  --spacing-sm: calc(var(--spacing-base) * 0.5);
+  --spacing-base: 1rem;
+  --spacing-lg: calc(var(--spacing-base) * 1.5);
+  --spacing-xl: calc(var(--spacing-base) * 2);
+  --spacing-2xl: calc(var(--spacing-base) * 3);
+  --spacing-3xl: calc(var(--spacing-base) * 4);
+  --spacing-4xl: calc(var(--spacing-base) * 6);
+  --spacing-5xl: calc(var(--spacing-base) * 8);
+  --spacing-6xl: calc(var(--spacing-base) * 12);
+  --spacing-7xl: calc(var(--spacing-base) * 16);
+  --spacing-8xl: calc(var(--spacing-base) * 24);
+  --spacing-9xl: calc(var(--spacing-base) * 32);
+  --spacing-10xl: calc(var(--spacing-base) * 40);
+  --spacing-11xl: calc(var(--spacing-base) * 48);
+
+  --font-weight-normal: 400;
+  --font-weight-heavy: 600;
 }
 
 :root {
