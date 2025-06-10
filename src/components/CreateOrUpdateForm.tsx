@@ -5,6 +5,7 @@ import { Check } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
 import { z } from 'zod';
 
 import { Button } from '~/components/ui/button';
@@ -43,13 +44,15 @@ export default function CreateOrUpdateForm({
   const createBot = api.bot.create.useMutation({
     onMutate: () => {
       setIsPending(true);
-      showCheckmark();
     },
     onSuccess: async (data) => {
       await utils.bot.getAll.invalidate();
 
-      setIsPending(false);
       router.push(`/dashboard/bots/${data?.id}`);
+    },
+    onError: async ({ message }) => {
+      setIsPending(false);
+      toast.error(message);
     },
   });
   const updateBot = api.bot.update.useMutation({
