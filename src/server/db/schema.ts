@@ -119,11 +119,11 @@ export const botWorkflowsToBots = createTable('bot_workflow_to_bot', (d) => ({
   botId: d
     .varchar({ length: 255 })
     .notNull()
-    .references(() => bots.id),
+    .references(() => bots.id, { onDelete: 'cascade' }),
   botWorkflowId: d
     .varchar({ length: 255 })
     .notNull()
-    .references(() => botWorkflows.id),
+    .references(() => botWorkflows.id, { onDelete: 'cascade' }),
 }));
 
 // Nodes table
