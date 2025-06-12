@@ -14,7 +14,11 @@ import { Label } from '~/components/ui/label';
 
 export type MessageNode = Node<{ message: string }, 'message'>;
 
-export default function MessageNode({ data, id }: NodeProps<MessageNode>) {
+export default function MessageNode({
+  data,
+  id,
+  selectable,
+}: NodeProps<MessageNode>) {
   const flowInstance = useReactFlow();
 
   // TODO: there is probably way better way of doing this
@@ -42,6 +46,7 @@ export default function MessageNode({ data, id }: NodeProps<MessageNode>) {
             value={data.message ?? ''}
             className="nodrag"
             placeholder="Hello! Place your order:!"
+            tabIndex={selectable ? 0 : -1}
           />
         </CardContent>
       </Card>

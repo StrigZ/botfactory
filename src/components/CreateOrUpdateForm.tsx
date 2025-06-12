@@ -105,7 +105,7 @@ export default function CreateOrUpdateForm({
     } else if (botData) {
       return 'Update';
     } else if (!botData) {
-      return 'Create';
+      return 'Verify';
     }
   };
 
@@ -126,7 +126,7 @@ export default function CreateOrUpdateForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-lg">
         <FormField
           control={form.control}
           name="name"

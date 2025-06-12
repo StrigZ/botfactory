@@ -18,7 +18,7 @@ export default function BotPage({ botId }: Props) {
   );
 
   return (
-    <div className="flex h-full overflow-hidden">
+    <div className="flex h-full overflow-hidden p-0">
       <div className="min-w-xs p-8">
         <Suspense fallback={<LoadingSpinner />}>
           <CreateOrUpdateForm botData={botData} isEditableByDefault={!botId} />

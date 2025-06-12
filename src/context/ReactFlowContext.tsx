@@ -220,7 +220,7 @@ export default function ReactFlowContextProvider({
 
   return (
     <ReactFlowContext.Provider value={value}>
-      <ReactFlowProvider>{children}</ReactFlowProvider>;
+      <ReactFlowProvider>{children}</ReactFlowProvider>
     </ReactFlowContext.Provider>
   );
 }

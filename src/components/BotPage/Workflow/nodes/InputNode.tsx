@@ -17,7 +17,11 @@ export type InputNode = Node<
   'input'
 >;
 
-export default function InputNode({ data, id }: NodeProps<InputNode>) {
+export default function InputNode({
+  data,
+  id,
+  selectable,
+}: NodeProps<InputNode>) {
   const flowInstance = useReactFlow();
 
   // TODO: there is probably way better way of doing this
@@ -55,6 +59,7 @@ export default function InputNode({ data, id }: NodeProps<InputNode>) {
             value={data.message ?? ''}
             className="nodrag"
             placeholder="What is your name?"
+            tabIndex={selectable ? 0 : -1}
           />
           <Label htmlFor="text">Variable Name:</Label>
           <Input
@@ -64,6 +69,7 @@ export default function InputNode({ data, id }: NodeProps<InputNode>) {
             value={data.variableName ?? ''}
             className="nodrag"
             placeholder="userName"
+            tabIndex={selectable ? 0 : -1}
           />
         </CardContent>
       </Card>
