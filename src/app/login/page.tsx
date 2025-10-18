@@ -20,7 +20,7 @@ export default async function LoginPage() {
   return (
     <HydrateClient>
       <main className="flex h-screen items-center justify-center bg-gradient-to-b from-white to-purple-300 text-center">
-        <Card className="max-w-sm bg-gradient-to-br from-white to-gray-100">
+        <Card className="bg-gradient-to-br from-white to-gray-100">
           <CardHeader>
             <CardTitle>Sign in with</CardTitle>
           </CardHeader>
