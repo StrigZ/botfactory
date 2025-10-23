@@ -17,7 +17,6 @@ import {
   IconUsers,
 } from '@tabler/icons-react';
 import { Bot } from 'lucide-react';
-import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import * as React from 'react';
 
@@ -34,6 +33,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '~/components/ui/sidebar';
+import { useAuth } from '~/hooks/use-auth';
 
 const data = {
   user: {
@@ -153,7 +153,8 @@ const data = {
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { data: session } = useSession();
+  const { user } = useAuth();
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -179,9 +180,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarFooter>
         <NavUser
           user={{
-            avatar: session?.user.image ?? '',
-            email: session?.user.email ?? '',
-            name: session?.user.name ?? '',
+            avatar: user?.image ?? '',
+            email: user?.email ?? '',
+            name: user?.name ?? '',
           }}
         />
       </SidebarFooter>

@@ -1,9 +1,9 @@
 import '@xyflow/react/dist/style.css';
 import { type Metadata } from 'next';
-import { SessionProvider } from 'next-auth/react';
 import { Geist } from 'next/font/google';
 
 import { Toaster } from '~/components/ui/sonner';
+import { AuthProvider } from '~/context/AuthContext';
 import '~/styles/globals.css';
 import { TRPCReactProvider } from '~/trpc/react';
 
@@ -25,10 +25,10 @@ export default function RootLayout({
     <html lang="en" className={`${geist.variable}`} suppressHydrationWarning>
       <body>
         <TRPCReactProvider>
-          <SessionProvider>
+          <AuthProvider>
             {children}
             <Toaster />
-          </SessionProvider>
+          </AuthProvider>
         </TRPCReactProvider>
       </body>
     </html>

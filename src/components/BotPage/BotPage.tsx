@@ -1,30 +1,36 @@
 'use client';
 
-import { Suspense } from 'react';
+import { AppSidebar } from '~/components/AppSidebar';
+import { SiteHeader } from '~/components/SiteHeader';
+import { SidebarInset, SidebarProvider } from '~/components/ui/sidebar';
+import DnDContextProvider from '~/context/DnDContext';
+import ReactFlowContextProvider from '~/context/ReactFlowContext';
+import { withAuth } from '~/hooks/use-auth';
 
-import { api } from '~/trpc/react';
-
-import CreateOrUpdateForm from '../CreateOrUpdateForm';
-import LoadingSpinner from '../LoadingSpinner';
-import Workflow from './Workflow/Workflow';
+import BotPageContent from './BotPageContent';
 
 type Props = { botId?: string };
-export default function BotPage({ botId }: Props) {
-  const { data: botData } = api.bot.getById.useQuery(
-    {
-      id: botId!,
-    },
-    { enabled: !!botId },
-  );
-
+function BotPage({ botId }: Props) {
   return (
-    <div className="flex h-full overflow-hidden p-0">
-      <div className="min-w-xs p-8">
-        <Suspense fallback={<LoadingSpinner />}>
-          <CreateOrUpdateForm botData={botData} isEditableByDefault={!botId} />
-        </Suspense>
-      </div>
-      <Workflow isEnabled={!!botData} />
-    </div>
+    <SidebarProvider
+      style={
+        {
+          '--sidebar-width': 'calc(var(--spacing) * 72)',
+          '--header-height': 'calc(var(--spacing) * 12)',
+        } as React.CSSProperties
+      }
+    >
+      <AppSidebar variant="inset" />
+      <SidebarInset>
+        <SiteHeader />
+        <ReactFlowContextProvider botId={botId}>
+          <DnDContextProvider>
+            <BotPageContent botId={botId} />
+          </DnDContextProvider>
+        </ReactFlowContextProvider>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }
+
+export default withAuth(BotPage);

@@ -1,21 +1,21 @@
-import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 
 import { buttonVariants } from '~/components/ui/button';
+import { useAuth } from '~/hooks/use-auth';
 
 export default function AuthButton() {
-  const { data: session } = useSession();
+  const { isAuthenticated } = useAuth();
 
   return (
     <Link
-      href={!session ? '/login' : '/dashboard'}
+      href={!isAuthenticated ? '/login' : '/dashboard'}
       className={buttonVariants({
         variant: 'secondary',
         className:
           'scale-95 cursor-pointer hover:scale-100 hover:shadow active:scale-105',
       })}
     >
-      {!session ? 'Sign Up' : 'Go to Dashboard'}
+      {!isAuthenticated ? 'Sign Up' : 'Go to Dashboard'}
     </Link>
   );
 }
