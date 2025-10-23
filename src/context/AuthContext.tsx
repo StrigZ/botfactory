@@ -4,11 +4,12 @@ import { type ReactNode, createContext, useEffect, useState } from 'react';
 
 import { apiClient } from '~/lib/api-client';
 
-interface User {
+export interface User {
   id: string;
   email: string;
-  name?: string;
-  picture?: string;
+  first_name?: string;
+  last_name?: string;
+  avatar_url?: string;
   // Add other user fields from your Django User model
 }
 
