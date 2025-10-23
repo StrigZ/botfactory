@@ -1,4 +1,8 @@
-import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
+import axios, {
+  type AxiosError,
+  type AxiosResponse,
+  type InternalAxiosRequestConfig,
+} from 'axios';
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000/api';
@@ -56,14 +60,14 @@ apiClient.interceptors.request.use(
 // Types for the queue of failed requests during token refresh
 interface QueueItem {
   resolve: (token: string | null) => void;
-  reject: (error: any) => void;
+  reject: (error: Error) => void;
 }
 
 // Response interceptor - Handle token refresh on 401 errors
 let isRefreshing = false;
 let failedQueue: QueueItem[] = [];
 
-const processQueue = (error: any, token: string | null = null): void => {
+const processQueue = (error: Error, token: string | null = null): void => {
   failedQueue.forEach((prom) => {
     if (error) {
       prom.reject(error);
@@ -76,11 +80,11 @@ const processQueue = (error: any, token: string | null = null): void => {
 
 // Define the shape of auth responses from Django
 interface TokenRefreshResponse {
-  token: string;
+  access: string;
 }
 
 apiClient.interceptors.response.use(
-  (response) => {
+  (response: AxiosResponse<{ token?: string }>) => {
     // If the response contains an access token (login/register responses), store it
     if (response.data?.token) {
       setAccessToken(response.data.token);
@@ -109,8 +113,8 @@ apiClient.interceptors.response.use(
             }
             return apiClient(originalRequest);
           })
-          .catch((err) => {
-            return Promise.reject(err);
+          .catch((err: string) => {
+            return Promise.reject(new Error(err));
           });
       }
 
@@ -127,11 +131,11 @@ apiClient.interceptors.response.use(
           },
         );
 
-        const newAccessToken = response.data.token;
+        const newAccessToken = response.data.access;
         setAccessToken(newAccessToken);
 
         // Process all queued requests with the new token
-        processQueue(null, newAccessToken);
+        processQueue(new Error(), newAccessToken);
 
         // Retry the original request with new token
         if (originalRequest.headers) {
@@ -140,7 +144,7 @@ apiClient.interceptors.response.use(
         return apiClient(originalRequest);
       } catch (refreshError) {
         // Refresh failed - clear tokens and redirect to login
-        processQueue(refreshError, null);
+        processQueue(new Error(refreshError as string), null);
         clearAccessToken();
 
         // Redirect to login page if we're in the browser
@@ -148,7 +152,7 @@ apiClient.interceptors.response.use(
           window.location.href = '/login';
         }
 
-        return Promise.reject(refreshError);
+        return Promise.reject(new Error(refreshError as string));
       } finally {
         isRefreshing = false;
       }
