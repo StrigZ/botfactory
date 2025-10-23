@@ -97,7 +97,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const logout = async (): Promise<void> => {
     try {
-      await apiClient.post('/auth/logout/');
+      await apiClient.post('/auth/token/logout/');
     } catch (error) {
       // Log the error but continue with logout anyway
       console.error('Logout error:', error);
