@@ -13,17 +13,21 @@ export const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true, // Important: sends httpOnly cookies with requests
+  withCredentials: true,
 });
 
-// Store access token in memory
+// Store both access and refresh tokens in memory
 let accessToken: string | null = null;
+let refreshToken: string | null = null;
 
-// Functions to manage access token
-export const setAccessToken = (token: string): void => {
-  accessToken = token;
+// Functions to manage tokens
+export const setTokens = (access: string, refresh: string): void => {
+  accessToken = access;
+  refreshToken = refresh;
+
   if (typeof window !== 'undefined') {
-    localStorage.setItem('access_token', token);
+    localStorage.setItem('access_token', access);
+    localStorage.setItem('refresh_token', refresh); // Store refresh token
   }
 };
 
@@ -34,10 +38,19 @@ export const getAccessToken = (): string | null => {
   return accessToken;
 };
 
-export const clearAccessToken = (): void => {
+export const getRefreshToken = (): string | null => {
+  if (!refreshToken && typeof window !== 'undefined') {
+    refreshToken = localStorage.getItem('refresh_token');
+  }
+  return refreshToken;
+};
+
+export const clearTokens = (): void => {
   accessToken = null;
+  refreshToken = null;
   if (typeof window !== 'undefined') {
     localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
   }
 };
 
@@ -46,7 +59,6 @@ apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = getAccessToken();
     if (token && config.headers) {
-      // Always use Bearer for JWT
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
@@ -80,13 +92,26 @@ const processQueue = (error: unknown, token: string | null = null): void => {
 // Define the shape of JWT responses from Django
 interface TokenResponse {
   access: string;
+  refresh?: string; // refresh token only returned on login/register
 }
 
 apiClient.interceptors.response.use(
-  (response: AxiosResponse<{ access?: string }>) => {
-    // If response contains access token (login/register/google), store it
+  (response: AxiosResponse<{ access?: string; refresh?: string }>) => {
+    // If response contains tokens (login/register/google), store them
     if (response.data?.access) {
-      setAccessToken(response.data.access);
+      const access = response.data.access;
+      const refresh = response.data.refresh;
+
+      if (refresh) {
+        // Login/register returns both tokens
+        setTokens(access, refresh);
+      } else {
+        // Refresh endpoint only returns access token
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('access_token', access);
+        }
+        accessToken = access;
+      }
     }
     return response;
   },
@@ -121,17 +146,27 @@ apiClient.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        // Try to refresh the access token
+        const currentRefreshToken = getRefreshToken();
+
+        if (!currentRefreshToken) {
+          throw new Error('No refresh token available');
+        }
+
+        // Try to refresh the access token - SEND REFRESH TOKEN IN BODY
         const response = await axios.post<TokenResponse>(
           `${API_BASE_URL}/auth/jwt/refresh/`,
-          {},
           {
-            withCredentials: true, // Sends refresh token cookie
+            refresh: currentRefreshToken, // ← Send in body
           },
         );
 
         const newAccessToken = response.data.access;
-        setAccessToken(newAccessToken);
+
+        // Update access token (refresh token stays the same)
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('access_token', newAccessToken);
+        }
+        accessToken = newAccessToken;
 
         // Process all queued requests with the new token
         processQueue(null, newAccessToken);
@@ -141,10 +176,10 @@ apiClient.interceptors.response.use(
           originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
         }
         return apiClient(originalRequest);
-      } catch (refreshError: unknown) {
+      } catch (refreshError) {
         // Refresh failed - clear tokens and redirect to login
         processQueue(refreshError, null);
-        clearAccessToken();
+        clearTokens();
 
         if (typeof window !== 'undefined') {
           window.location.href = '/login';
