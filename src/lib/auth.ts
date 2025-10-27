@@ -76,7 +76,7 @@ export async function deleteTokens() {
 }
 
 export async function refreshToken() {
-  const res = await fetch(`${env.NEXT_PUBLIC_API_URL}/auth/jwt/refresh/`, {
+  const res = await fetch(`${env.API_URL}/auth/jwt/refresh/`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

@@ -7,16 +7,13 @@ export const env = createEnv({
    * isn't built with invalid env vars.
    */
   server: {
-    AUTH_SECRET:
-      process.env.NODE_ENV === 'production'
-        ? z.string()
-        : z.string().optional(),
     DATABASE_URL: z.string().url(),
     NODE_ENV: z
       .enum(['development', 'test', 'production'])
       .default('development'),
     VERCEL_URL: z.string(),
     VERCEL_AUTOMATION_BYPASS_SECRET: z.string(),
+    API_URL: z.string(),
   },
 
   /**
@@ -26,7 +23,6 @@ export const env = createEnv({
    */
   client: {
     // NEXT_PUBLIC_CLIENTVAR: z.string(),
-    NEXT_PUBLIC_API_URL: z.string(),
     NEXT_PUBLIC_AUTH_GOOGLE_ID: z.string(),
     NEXT_PUBLIC_AUTH_GOOGLE_SECRET: z.string(),
   },
@@ -36,10 +32,9 @@ export const env = createEnv({
    * middlewares) or client-side so we need to destruct manually.
    */
   runtimeEnv: {
-    AUTH_SECRET: process.env.AUTH_SECRET,
     NEXT_PUBLIC_AUTH_GOOGLE_ID: process.env.NEXT_PUBLIC_AUTH_GOOGLE_ID,
     NEXT_PUBLIC_AUTH_GOOGLE_SECRET: process.env.NEXT_PUBLIC_AUTH_GOOGLE_SECRET,
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+    API_URL: process.env.API_URL,
     DATABASE_URL: process.env.DATABASE_URL,
     NODE_ENV: process.env.NODE_ENV,
     VERCEL_URL: process.env.VERCEL_URL,

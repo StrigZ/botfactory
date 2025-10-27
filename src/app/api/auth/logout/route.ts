@@ -3,7 +3,7 @@
 import { env } from '~/env';
 import { deleteTokens, getTokens } from '~/lib/auth';
 
-const API_URL = env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000';
+const API_URL = env.API_URL ?? 'http://localhost:3000';
 
 export async function POST(request: Request) {
   const { access } = await getTokens();

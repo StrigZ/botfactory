@@ -15,7 +15,7 @@ type ResponseData = {
   user: User;
 };
 
-const API_URL = env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000';
+const API_URL = env.API_URL ?? 'http://localhost:3000';
 
 export async function POST(request: NextRequest) {
   const requestData = (await request.json()) as RequestData;

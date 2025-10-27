@@ -6,7 +6,7 @@ import type { NextRequest } from 'next/server';
 import type { User } from '~/context/AuthContext';
 import { env } from '~/env';
 
-const API_URL = env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000';
+const API_URL = env.API_URL ?? 'http://localhost:3000';
 
 type MeResponseData = {
   user: User;
