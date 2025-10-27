@@ -3,6 +3,7 @@
 import type { NextRequest } from 'next/server';
 
 import type { User } from '~/context/AuthContext';
+import { env } from '~/env';
 import { saveTokensFromCookie } from '~/lib/auth';
 
 type AuthProviderData = { token: string };
@@ -14,7 +15,7 @@ type ResponseData = {
   user: User;
 };
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000';
+const API_URL = env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000';
 
 export async function POST(request: NextRequest) {
   const requestData = (await request.json()) as RequestData;
@@ -47,6 +48,6 @@ export async function POST(request: NextRequest) {
     return Response.json({ user: data.user });
   } catch (e) {
     console.error(e);
-    return Response.json({ status: 500, statusText: (e as Error).message });
+    throw e;
   }
 }
