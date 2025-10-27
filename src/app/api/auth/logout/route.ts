@@ -1,7 +1,5 @@
 'use server';
 
-import { cookies } from 'next/headers';
-
 import { deleteTokens, getTokens } from '~/lib/auth';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000';
@@ -13,10 +11,6 @@ export async function POST(request: Request) {
   try {
     const requestOption: RequestInit = {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${access}`,
-        credentials: 'include',
-      },
     };
     const res = await fetch(`${API_URL}/auth/logout/`, requestOption);
     if (!res.ok) {

@@ -1,6 +1,5 @@
 'use server';
 
-import { cookies } from 'next/headers';
 import type { NextRequest } from 'next/server';
 
 import type { User } from '~/context/AuthContext';
@@ -29,7 +28,6 @@ export async function POST(request: NextRequest) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      credentials: 'include',
     },
     body: JSON.stringify({ token: requestData.token }),
   };

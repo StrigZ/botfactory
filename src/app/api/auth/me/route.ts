@@ -8,9 +8,6 @@ import { getTokens, saveTokensFromCookie, setTokens } from '~/lib/auth';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000';
 
-type RefreshResponseData = {
-  access: string;
-};
 type MeResponseData = {
   user: User;
 };
@@ -24,9 +21,7 @@ export async function GET(request: NextRequest) {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Cookie: (await cookies()).toString(),
           },
-          credentials: 'include',
         });
         if (!res.ok) {
           console.error(await res.text());
