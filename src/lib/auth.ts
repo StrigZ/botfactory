@@ -3,6 +3,8 @@
 import type { ResponseCookie } from 'next/dist/compiled/@edge-runtime/cookies';
 import { cookies } from 'next/headers';
 
+import { env } from '~/env';
+
 const ACCESS_TOKEN_NAME = 'access_token';
 const REFRESH_TOKEN_NAME = 'refresh_token';
 
@@ -71,4 +73,23 @@ export async function setTokens({
 export async function deleteTokens() {
   (await cookies()).set(ACCESS_TOKEN_NAME, '', { expires: new Date(0) });
   (await cookies()).set(REFRESH_TOKEN_NAME, '', { expires: new Date(0) });
+}
+
+export async function refreshToken() {
+  const res = await fetch(`${env.NEXT_PUBLIC_API_URL}/auth/jwt/refresh/`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Cookie: (await cookies()).toString(),
+    },
+    credentials: 'include',
+  });
+  if (!res.ok) {
+    console.error(await res.text());
+    throw new Error(
+      'Error during token refreshing api call: ' + res.statusText,
+    );
+  }
+  const resCookies = res.headers.getSetCookie();
+  await saveTokensFromCookie(resCookies);
 }
