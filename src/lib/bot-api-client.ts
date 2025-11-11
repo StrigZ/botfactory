@@ -19,6 +19,14 @@ export type DeleteBotInput = {
   id: string;
 };
 
+export type DeployBotInput = {
+  id: string;
+};
+
+export type PauseBotInput = {
+  id: string;
+};
+
 class BotApiClient {
   // TODO: make separate api client class
   private async handleResponse<T>(res: Response): Promise<T> {
@@ -63,7 +71,7 @@ class BotApiClient {
     const res = await fetch(`${API_URL}/${id}`, fetchProps);
     return this.handleResponse<{ success: boolean }>(res);
   }
-  async deploy(id: string) {
+  async deploy({ id }: DeployBotInput) {
     const fetchProps: RequestInit = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -71,7 +79,7 @@ class BotApiClient {
     const res = await fetch(`${API_URL}/${id}/deploy`, fetchProps);
     return this.handleResponse<{ success: boolean }>(res);
   }
-  async pause(id: string) {
+  async pause({ id }: PauseBotInput) {
     const fetchProps: RequestInit = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
