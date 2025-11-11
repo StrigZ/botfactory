@@ -17,8 +17,8 @@ import {
 } from '~/components/ui/form';
 import { Input } from '~/components/ui/input';
 import { useBotMutations } from '~/hooks/use-bot-mutations';
+import type { Bot } from '~/lib/bot-api-client';
 import { cn } from '~/lib/utils';
-import type { Bot } from '~/server/db/schema';
 
 import LoadingSpinner from './LoadingSpinner';
 

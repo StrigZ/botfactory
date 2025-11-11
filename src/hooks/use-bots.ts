@@ -16,6 +16,7 @@ export function useBot({ id }: { id: string }) {
   return useQuery({
     queryKey: botKeys.detail(id),
     queryFn: () => botApiClient.getById(id),
+    enabled: !!id,
   });
 }
 

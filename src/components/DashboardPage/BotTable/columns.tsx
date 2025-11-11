@@ -6,8 +6,8 @@ import Link from 'next/link';
 
 import { Button, buttonVariants } from '~/components/ui/button';
 import { useBotMutations } from '~/hooks/use-bot-mutations';
+import type { Bot, BotStatus } from '~/lib/bot-api-client';
 import { cn } from '~/lib/utils';
-import type { Bot, BotStatus } from '~/server/db/schema';
 
 export const columns: ColumnDef<Bot>[] = [
   {

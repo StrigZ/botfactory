@@ -3,6 +3,7 @@
 import { Plus } from 'lucide-react';
 import Link from 'next/link';
 
+import { useBots } from '~/hooks/use-bots';
 import { api } from '~/trpc/react';
 
 import Summary from '../Summary';
@@ -10,11 +11,10 @@ import { buttonVariants } from '../ui/button';
 import BotTable from './BotTable/BotTable';
 
 export default function DashboardMain() {
-  // const [data] = api.bot.getAll.useSuspenseQuery();
-  const data = [];
+  const { data } = useBots();
   return (
     <div className="px-3xl pt-xl">
-      {data.length ? (
+      {data?.length ? (
         <>
           <Summary />
           <BotTable bots={data} />

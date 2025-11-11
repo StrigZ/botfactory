@@ -1,6 +1,6 @@
 'use client';
 
-import type { Bot } from '~/server/db/schema';
+import type { Bot } from '~/lib/bot-api-client';
 
 import { columns } from './columns';
 import { DataTable } from './data-table';
