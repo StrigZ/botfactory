@@ -5,9 +5,9 @@ import { ArrowUpDown, Circle, SquareArrowOutUpRight } from 'lucide-react';
 import Link from 'next/link';
 
 import { Button, buttonVariants } from '~/components/ui/button';
+import { useBotMutations } from '~/hooks/use-bot-mutations';
 import { cn } from '~/lib/utils';
 import type { Bot, BotStatus } from '~/server/db/schema';
-import { api } from '~/trpc/react';
 
 export const columns: ColumnDef<Bot>[] = [
   {
@@ -88,25 +88,17 @@ export const columns: ColumnDef<Bot>[] = [
   {
     id: 'actions',
     cell: ({ row }) => {
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      const { deployBot, pauseBot, isDeploying, isPausing } = useBotMutations();
       const bot = row.original;
       const isPublished = bot.status === 'published';
-      const utils = api.useUtils();
-      const deployBot = api.bot.deploy.useMutation({
-        onSuccess: async () => {
-          await utils.bot.getAll.invalidate();
-        },
-      });
-      const undeployBot = api.bot.undeploy.useMutation({
-        onSuccess: async () => {
-          await utils.bot.getAll.invalidate();
-        },
-      });
-      const isLoading = deployBot.isPending || undeployBot.isPending;
+
+      const isLoading = isDeploying || isPausing;
 
       const getDisplayText = () => {
-        if (undeployBot.isPending) {
+        if (isPausing) {
           return 'Pausing...';
-        } else if (deployBot.isPending) {
+        } else if (isDeploying) {
           return 'Deploying...';
         } else if (isPublished) {
           return 'Pause';
@@ -120,9 +112,7 @@ export const columns: ColumnDef<Bot>[] = [
           <Button
             className={cn('cursor-pointer', { 'cursor-none': isLoading })}
             onClick={() =>
-              isPublished
-                ? undeployBot.mutate({ id: bot.id })
-                : deployBot.mutate({ id: bot.id })
+              isPublished ? pauseBot({ id: bot.id }) : deployBot({ id: bot.id })
             }
             disabled={isLoading}
             variant={isPublished ? 'destructive' : 'default'}
