@@ -2,17 +2,21 @@ const API_URL = '/api/bots';
 
 type Bot = { id: string; name: string; token: string };
 
-type CreateBotInput = {
+export type CreateBotInput = {
   name: string;
   token: string;
 };
 
-type UpdateBotInput = {
+export type UpdateBotInput = {
   id: string;
   data: {
     name?: string;
     token?: string;
   };
+};
+
+export type DeleteBotInput = {
+  id: string;
 };
 
 class BotApiClient {
@@ -52,7 +56,7 @@ class BotApiClient {
     const res = await fetch(`${API_URL}/${id}`, fetchProps);
     return this.handleResponse<Bot>(res);
   }
-  async delete(id: string) {
+  async delete({ id }: DeleteBotInput) {
     const fetchProps: RequestInit = {
       method: 'DELETE',
     };

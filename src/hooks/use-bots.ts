@@ -1,3 +1,5 @@
+'use client';
+
 import { useQuery } from '@tanstack/react-query';
 
 import { botApiClient } from '~/lib/bot-api-client';
