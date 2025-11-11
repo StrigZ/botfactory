@@ -2,10 +2,8 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Check } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
 import { z } from 'zod';
 
 import { Button } from '~/components/ui/button';
@@ -18,9 +16,9 @@ import {
   FormMessage,
 } from '~/components/ui/form';
 import { Input } from '~/components/ui/input';
+import { useBotMutations } from '~/hooks/use-bot-mutations';
 import { cn } from '~/lib/utils';
 import type { Bot } from '~/server/db/schema';
-import { api } from '~/trpc/react';
 
 import LoadingSpinner from './LoadingSpinner';
 
@@ -32,40 +30,10 @@ export default function CreateOrUpdateForm({
   botData,
   isEditableByDefault = false,
 }: Props) {
-  const [isPending, setIsPending] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
+  const [isCheckmarkVisible, setIsCheckMarkVisible] = useState(false);
   const [isEditable, setIsEditable] = useState(isEditableByDefault);
-
+  const { createBot, updateBot, isCreating, isUpdating } = useBotMutations();
   const doesBotExist = !!botData;
-
-  const router = useRouter();
-
-  const utils = api.useUtils();
-  const createBot = api.bot.create.useMutation({
-    onMutate: () => {
-      setIsPending(true);
-    },
-    onSuccess: async (data) => {
-      await utils.bot.getAll.invalidate();
-
-      router.push(`/dashboard/bots/${data?.id}`);
-    },
-    onError: async ({ message }) => {
-      setIsPending(false);
-      toast.error(message);
-    },
-  });
-  const updateBot = api.bot.update.useMutation({
-    onMutate: () => {
-      setIsPending(true);
-    },
-    onSuccess: async () => {
-      await utils.bot.getAll.invalidate();
-      await utils.bot.getById.invalidate({ id: botData?.id });
-      setIsPending(false);
-      showCheckmark();
-    },
-  });
 
   const formSchema = z.object({
     name: z.string().min(1, { message: 'Name is required!' }),
@@ -78,29 +46,26 @@ export default function CreateOrUpdateForm({
   });
 
   function onSubmit({ name, token }: z.infer<typeof formSchema>) {
-    if (!isEditable || isPending || isSuccess) {
+    if (!isEditable || isCreating || isUpdating || isCheckmarkVisible) {
       return;
     }
 
     if (doesBotExist) {
-      updateBot.mutate({
-        name,
-        token,
-        id: botData.id,
-      });
+      updateBot({ id: botData.id, data: { name, token } });
+      showCheckmark();
     } else {
-      createBot.mutate({ name, token });
+      createBot({ name, token });
     }
   }
 
   const getSubmitButtonDisplayText = () => {
-    if (isSuccess) {
+    if (isCheckmarkVisible) {
       return (
         <>
           Success! <Check />
         </>
       );
-    } else if (isPending) {
+    } else if (isCreating || isUpdating) {
       return <LoadingSpinner />;
     } else if (botData) {
       return 'Update';
@@ -110,17 +75,13 @@ export default function CreateOrUpdateForm({
   };
 
   const getEditButtonDisplayText = () => {
-    if (isEditable) {
-      return 'Cancel';
-    } else if (!isEditable) {
-      return 'Edit';
-    }
+    return isEditable ? 'Cancel' : 'Edit';
   };
 
   const showCheckmark = () => {
-    setIsSuccess(true);
+    setIsCheckMarkVisible(true);
     setTimeout(() => {
-      setIsSuccess(false);
+      setIsCheckMarkVisible(false);
     }, 2000);
   };
 
@@ -165,7 +126,9 @@ export default function CreateOrUpdateForm({
           {isEditable && (
             <Button
               type="submit"
-              className={cn('cursor-pointer', { 'bg-green-500': isSuccess })}
+              className={cn('cursor-pointer', {
+                'bg-green-500': isCheckmarkVisible,
+              })}
               disabled={!isEditable}
             >
               {getSubmitButtonDisplayText()}
@@ -177,7 +140,7 @@ export default function CreateOrUpdateForm({
               type="button"
               variant={!isEditable ? 'default' : 'destructive'}
               onClick={() => setIsEditable((pv) => !pv)}
-              disabled={isPending}
+              disabled={isCreating || isUpdating}
             >
               {getEditButtonDisplayText()}
             </Button>

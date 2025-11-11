@@ -23,6 +23,7 @@ export function useBotMutations() {
       await queryClient.invalidateQueries({ queryKey: botKeys.lists() });
       await queryClient.setQueryData(botKeys.detail(data.id), data);
       toast.success('Bot created successfully');
+      router.push(`/dashboard/bots/${data?.id}`);
     },
     onError: ({ message }) => toast.error(message),
   });
