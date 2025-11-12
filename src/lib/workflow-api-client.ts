@@ -25,7 +25,7 @@ export type WorkflowEdge = {
   source: number;
   target: number;
 };
-export type UpdateBotWorkflowInput = {
+export type UpdateWorkflowInput = {
   id: string;
   data: {
     nodes: WorkflowNode[];
@@ -33,7 +33,7 @@ export type UpdateBotWorkflowInput = {
   };
 };
 
-class BotWorkflowApiClient {
+class WorkflowApiClient {
   // TODO: make separate api client class
   private async handleResponse<T>(res: Response): Promise<T> {
     if (!res.ok) {
@@ -52,7 +52,7 @@ class BotWorkflowApiClient {
     const res = await fetch(`${API_URL}/${id}`);
     return this.handleResponse<WorkflowWithNodes>(res);
   }
-  async update({ id, data: { nodes, edges } }: UpdateBotWorkflowInput) {
+  async update({ id, data: { nodes, edges } }: UpdateWorkflowInput) {
     const fetchProps: RequestInit = {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -63,4 +63,4 @@ class BotWorkflowApiClient {
   }
 }
 
-export const botWorkflowApiClient = new BotWorkflowApiClient();
+export const workflowApiClient = new WorkflowApiClient();
