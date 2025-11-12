@@ -16,8 +16,8 @@ export type WorkflowNode = {
   workflow: number;
   node_type: string;
   name: string;
-  position: string;
-  data: string;
+  position: { x: number; y: number };
+  data: Record<string, unknown>;
 };
 export type WorkflowEdge = {
   id: number;

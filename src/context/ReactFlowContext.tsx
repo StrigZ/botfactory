@@ -22,9 +22,9 @@ import {
 } from 'react';
 
 import type { DraggableNodeData } from '~/components/BotPage/Workflow/DraggableNode';
-import type { BotWorkflowWithNodesAndEdges } from '~/lib/telegram/bot-service';
-import type { NodeType } from '~/server/db/schema';
-import { api } from '~/trpc/react';
+import { useWorkflowMutations } from '~/hooks/use-workflow-mutations';
+import { useWorkflowWithNodes } from '~/hooks/use-workflows';
+import type { WorkflowWithNodes } from '~/lib/workflow-api-client';
 
 type ReactFlowContext = {
   nodes: Node[];
@@ -85,22 +85,23 @@ const defaultNodes = [
 ];
 const defaultEdges = [{ id: '1-2', source: '1', target: '2' }];
 
-export const getNodes = (workflow?: BotWorkflowWithNodesAndEdges): Node[] =>
-  workflow && workflow.workflowNodes.length > 0
-    ? workflow.workflowNodes.map((node) => ({
-        id: node.id,
-        position: node.position as { x: number; y: number },
-        data: node.data as Record<string, string>,
-        type: node.type,
+export const getNodes = (workflow?: WorkflowWithNodes): Node[] =>
+  workflow && workflow.nodes.length > 0
+    ? workflow.nodes.map((node) => ({
+        id: node.id.toString(),
+        name: node.name,
+        position: node.position,
+        data: node.data,
+        type: node.node_type,
       }))
     : defaultNodes;
 
-export const getEdges = (workflow?: BotWorkflowWithNodesAndEdges): Edge[] =>
-  workflow && workflow.workflowNodes.length > 0
-    ? workflow.workflowEdges.map((edge) => ({
-        id: edge.id,
-        source: edge.sourceId,
-        target: edge.targetId,
+export const getEdges = (workflow?: WorkflowWithNodes): Edge[] =>
+  workflow && workflow.edges.length > 0
+    ? workflow.edges.map((edge) => ({
+        id: edge.id.toString(),
+        source: edge.source.toString(),
+        target: edge.target.toString(),
         animated: true,
       }))
     : defaultEdges;
@@ -112,12 +113,7 @@ export default function ReactFlowContextProvider({
   botId?: string;
   children: ReactNode;
 }) {
-  const { data: workflow } = api.workflow.getByBotId.useQuery(
-    {
-      id: botId!,
-    },
-    { enabled: !!botId },
-  );
+  const { data: workflow } = useWorkflowWithNodes({ id: botId! });
 
   const [nodes, setNodes] = useState<ReactFlowContext['nodes']>(
     getNodes(workflow),
@@ -129,7 +125,7 @@ export default function ReactFlowContextProvider({
     null,
   );
 
-  const updateWorkflow = api.workflow.update.useMutation();
+  const { updateWorkflow } = useWorkflowMutations();
 
   const onInit: ReactFlowContext['onInit'] = useCallback(
     (instance: ReactFlowInstance) => setFlowInstance(instance),
@@ -153,27 +149,30 @@ export default function ReactFlowContextProvider({
   const onSave: ReactFlowContext['onSave'] = useCallback(() => {
     const flow = flowInstance?.toObject();
 
-    if (!flow) {
+    if (!flow || !workflow) {
       return;
     }
-    if (workflow) {
-      updateWorkflow.mutate({
-        id: workflow.id,
+
+    updateWorkflow({
+      id: workflow.id.toString(),
+      data: {
         edges: flow.edges.map((edge) => ({
-          sourceId: edge.source,
-          targetId: edge.target,
-          workflowId: workflow.id,
+          id: +edge.id,
+          source: +edge.source,
+          target: +edge.target,
+          workflow: workflow.id,
         })),
         nodes: flow.nodes.map((node) => ({
-          name: 'not implemented',
+          id: +node.id,
+          name: (node.data.name as string) ?? '',
           position: node.position,
-          type: node.type as NodeType,
-          workflowId: workflow.id,
+          node_type: node.type!,
+          workflow: +workflow.id,
           data: node.data,
           flowId: node.id,
         })),
-      });
-    }
+      },
+    });
   }, [flowInstance, updateWorkflow, workflow]);
 
   const createNewFlowNode: ReactFlowContext['createNewFlowNode'] = useCallback(

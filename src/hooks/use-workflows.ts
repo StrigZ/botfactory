@@ -24,5 +24,6 @@ export function useWorkflowWithNodes({ id }: { id: string }) {
   return useQuery({
     queryKey: workflowKeys.detailWithNodes(id),
     queryFn: () => workflowApiClient.getByIdWithNodes(id),
+    enabled: !!id,
   });
 }
