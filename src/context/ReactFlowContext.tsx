@@ -26,6 +26,24 @@ import { useWorkflowMutations } from '~/hooks/use-workflow-mutations';
 import { useWorkflowWithNodes } from '~/hooks/use-workflows';
 import type { WorkflowWithNodes } from '~/lib/workflow-api-client';
 
+const DEFAULT_NODES: Node[] = [
+  {
+    id: '1',
+    position: { x: 0, y: 0 },
+    type: 'message',
+    data: {
+      message: 'I am the message node!',
+    },
+  },
+  {
+    id: '2',
+    position: { x: 250, y: 200 },
+    type: 'input',
+    data: { message: 'I am the input node' },
+  },
+];
+const DEFAULT_EDGES: Edge[] = [{ id: '1-2', source: '1', target: '2' }];
+
 type ReactFlowContext = {
   nodes: Node[];
   edges: Edge[];
@@ -67,44 +85,32 @@ const ReactFlowContext = createContext<ReactFlowContext>({
 
 export const useReactFlowContext = () => useContext(ReactFlowContext);
 
-const defaultNodes = [
-  {
-    id: '1', // required
-    position: { x: 0, y: 0 }, // required
-    type: 'message',
-    data: {
-      message: 'I am the message node!',
-    },
-  },
-  {
-    id: '2', // required
-    position: { x: 250, y: 200 }, // required
-    type: 'input',
-    data: { message: 'I am the input node' }, // required
-  },
-];
-const defaultEdges = [{ id: '1-2', source: '1', target: '2' }];
+export const extractNodesFromWorkflow = (workflow: WorkflowWithNodes): Node[] =>
+  workflow.nodes.map((node) => ({
+    id: node.id.toString(),
+    name: node.name,
+    position: node.position,
+    data: node.data,
+    type: node.node_type,
+  }));
 
-export const getNodes = (workflow?: WorkflowWithNodes): Node[] =>
-  workflow && workflow.nodes.length > 0
-    ? workflow.nodes.map((node) => ({
-        id: node.id.toString(),
-        name: node.name,
-        position: node.position,
-        data: node.data,
-        type: node.node_type,
-      }))
-    : defaultNodes;
+export const extractEdgesFromWorkflow = (workflow: WorkflowWithNodes): Edge[] =>
+  workflow.edges.map((edge) => ({
+    id: edge.id.toString(),
+    source: edge.source.toString(),
+    target: edge.target.toString(),
+    animated: true,
+  }));
 
-export const getEdges = (workflow?: WorkflowWithNodes): Edge[] =>
-  workflow && workflow.edges.length > 0
-    ? workflow.edges.map((edge) => ({
-        id: edge.id.toString(),
-        source: edge.source.toString(),
-        target: edge.target.toString(),
-        animated: true,
-      }))
-    : defaultEdges;
+const getNodes = (workflow?: WorkflowWithNodes) =>
+  workflow && workflow.nodes.length
+    ? extractNodesFromWorkflow(workflow)
+    : DEFAULT_NODES;
+
+const getEdges = (workflow?: WorkflowWithNodes) =>
+  workflow && workflow.edges.length
+    ? extractEdgesFromWorkflow(workflow)
+    : DEFAULT_EDGES;
 
 export default function ReactFlowContextProvider({
   botId,
