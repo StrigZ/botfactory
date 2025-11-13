@@ -2,8 +2,8 @@ const API_URL = '/api/workflows';
 
 export type Workflow = {
   id: number;
-  owner: number;
-  bot: number;
+  owner_id: number;
+  bot_id: number;
   name: string;
   created_at: string;
 };
@@ -49,7 +49,7 @@ class WorkflowApiClient {
     return this.handleResponse<Workflow>(res);
   }
   async getByIdWithNodes(id: string) {
-    const res = await fetch(`${API_URL}/${id}`);
+    const res = await fetch(`${API_URL}/${id}/full`);
     return this.handleResponse<WorkflowWithNodes>(res);
   }
   async update({ id, data: { nodes, edges } }: UpdateWorkflowInput) {
