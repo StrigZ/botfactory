@@ -51,7 +51,7 @@ export default function CreateOrUpdateForm({
     }
 
     if (doesBotExist) {
-      updateBot({ id: botData.id, data: { name, token } });
+      updateBot({ id: botData.id.toString(), data: { name, token } });
       showCheckmark();
     } else {
       createBot({ name, token });
