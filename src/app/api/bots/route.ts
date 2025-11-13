@@ -31,14 +31,16 @@ export async function POST(request: NextRequest) {
     return Response.json(data);
   } catch (e) {
     console.error(e);
-    return Response.json({
-      status: 500,
-      message: 'Unexpected error occurred during bot creation.',
-    });
+    return Response.json(
+      {
+        message: 'Unexpected error occurred during bot creation.',
+      },
+      { status: 500 },
+    );
   }
 }
 
-export async function GET(request: NextRequest) {
+export async function GET(_: NextRequest) {
   const requestOption: RequestInit = {
     headers: {
       'Content-Type': 'application/json',
@@ -59,9 +61,11 @@ export async function GET(request: NextRequest) {
     return Response.json(data);
   } catch (e) {
     console.error(e);
-    return Response.json({
-      status: 500,
-      message: 'Unexpected error occurred during bots fetching.',
-    });
+    return Response.json(
+      {
+        message: 'Unexpected error occurred during bots fetching.',
+      },
+      { status: 500 },
+    );
   }
 }

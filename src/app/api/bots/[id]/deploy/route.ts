@@ -34,9 +34,13 @@ export async function POST(
     return Response.json(data);
   } catch (e) {
     console.error(e);
-    return Response.json({
-      status: 500,
-      message: 'Unexpected error occurred during bot deploying.',
-    });
+    return Response.json(
+      {
+        message: 'Unexpected error occurred during bot deploying.',
+      },
+      {
+        status: 500,
+      },
+    );
   }
 }

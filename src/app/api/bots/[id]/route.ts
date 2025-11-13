@@ -33,10 +33,12 @@ export async function GET(
     return Response.json(data);
   } catch (e) {
     console.error(e);
-    return Response.json({
-      status: 500,
-      message: 'Unexpected error occurred during bot fetching.',
-    });
+    return Response.json(
+      {
+        message: 'Unexpected error occurred during bot fetching.',
+      },
+      { status: 500 },
+    );
   }
 }
 
@@ -70,10 +72,12 @@ export async function PATCH(
     return Response.json(data);
   } catch (e) {
     console.error(e);
-    return Response.json({
-      status: 500,
-      message: 'Unexpected error occurred during bot updating.',
-    });
+    return Response.json(
+      {
+        message: 'Unexpected error occurred during bot updating.',
+      },
+      { status: 500 },
+    );
   }
 }
 
@@ -103,9 +107,11 @@ export async function DELETE(
     return Response.json({ status: 200 });
   } catch (e) {
     console.error(e);
-    return Response.json({
-      status: 500,
-      message: 'Unexpected error occurred during bot deletion.',
-    });
+    return Response.json(
+      {
+        message: 'Unexpected error occurred during bot deletion.',
+      },
+      { status: 500 },
+    );
   }
 }

@@ -3,7 +3,9 @@ import { ThemeProvider } from 'next-themes';
 import BotPage from '~/components/BotPage/BotPage';
 import { botKeys } from '~/hooks/use-bots';
 import { workflowKeys } from '~/hooks/use-workflows';
+import { botApiClient } from '~/lib/bot-api-client';
 import { getQueryClient } from '~/lib/query-client';
+import { workflowApiClient } from '~/lib/workflow-api-client';
 
 export default async function Page({
   params,
@@ -13,12 +15,14 @@ export default async function Page({
   const queryClient = getQueryClient();
   const { botId } = await params;
 
-  await queryClient.prefetchQuery({
-    queryKey: botKeys.detail(botId),
-  });
-  await queryClient.prefetchQuery({
-    queryKey: workflowKeys.detailWithNodes(botId),
-  });
+  // await queryClient.prefetchQuery({
+  //   queryKey: botKeys.detail(botId),
+  //   queryFn: () => botApiClient.getById(botId),
+  // });
+  // await queryClient.prefetchQuery({
+  //   queryKey: workflowKeys.detailWithNodes(botId),
+  //   queryFn: () => workflowApiClient.getById(botId),
+  // });
 
   return (
     <ThemeProvider
