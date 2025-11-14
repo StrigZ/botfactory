@@ -6,7 +6,7 @@ import Link from 'next/link';
 
 import { Button, buttonVariants } from '~/components/ui/button';
 import { useBotMutations } from '~/hooks/use-bot-mutations';
-import type { Bot, BotStatus } from '~/lib/bot-api-client';
+import type { Bot } from '~/lib/bot-api-client';
 import { cn } from '~/lib/utils';
 
 export const columns: ColumnDef<Bot>[] = [
@@ -15,7 +15,7 @@ export const columns: ColumnDef<Bot>[] = [
     header: '',
   },
   {
-    accessorKey: 'status',
+    accessorKey: 'is_deployed',
     header: ({ column }) => {
       return (
         <Button
@@ -28,28 +28,17 @@ export const columns: ColumnDef<Bot>[] = [
       );
     },
     cell: (info) => {
-      const status = info.renderValue() as BotStatus;
-
+      const status = info.renderValue() as boolean;
       const getDisplayText = () => {
-        switch (status) {
-          case 'published':
-            return 'Active';
-          case 'paused':
-            return 'Paused';
-          case 'draft':
-            return 'Draft';
-          default:
-            break;
-        }
+        return status ? 'Deployed' : 'Paused';
       };
 
       return (
         <div className="flex items-center gap-1 text-center">
           <Circle
             className={cn({
-              'animate-pulse fill-green-300': status === 'published',
-              'fill-orange-300': status === 'paused',
-              'fill-gray-300': status === 'draft',
+              'animate-pulse fill-green-300': status,
+              'fill-orange-300': !status,
             })}
             size={16}
           />
@@ -91,7 +80,6 @@ export const columns: ColumnDef<Bot>[] = [
       // eslint-disable-next-line react-hooks/rules-of-hooks
       const { deployBot, pauseBot, isDeploying, isPausing } = useBotMutations();
       const bot = row.original;
-      const isPublished = bot.status === 'published';
 
       const isLoading = isDeploying || isPausing;
 
@@ -100,9 +88,9 @@ export const columns: ColumnDef<Bot>[] = [
           return 'Pausing...';
         } else if (isDeploying) {
           return 'Deploying...';
-        } else if (isPublished) {
+        } else if (bot.is_deployed) {
           return 'Pause';
-        } else if (!isPublished) {
+        } else if (!bot.is_deployed) {
           return 'Deploy';
         }
       };
@@ -112,10 +100,12 @@ export const columns: ColumnDef<Bot>[] = [
           <Button
             className={cn('cursor-pointer', { 'cursor-none': isLoading })}
             onClick={() =>
-              isPublished ? pauseBot({ id: bot.id }) : deployBot({ id: bot.id })
+              bot.is_deployed
+                ? pauseBot({ id: bot.id })
+                : deployBot({ id: bot.id })
             }
             disabled={isLoading}
-            variant={isPublished ? 'destructive' : 'default'}
+            variant={bot.is_deployed ? 'destructive' : 'default'}
           >
             {getDisplayText()}
           </Button>

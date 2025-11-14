@@ -1,16 +1,14 @@
 const API_URL = '/api/bots';
 
 export type Bot = {
-  id: number;
-  owner: number;
+  id: string;
+  owner_id: string;
   name: string;
   token: string;
   username: string;
   is_deployed: boolean;
   created_at: string;
 };
-
-export type BotStatus = 'draft' | 'published' | 'paused' | 'archived';
 
 export type CreateBotInput = {
   name: string;

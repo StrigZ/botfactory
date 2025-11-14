@@ -1,36 +1,35 @@
 const API_URL = '/api/workflows';
 
 export type Workflow = {
-  id: number;
-  owner_id: number;
-  bot_id: number;
+  id: string;
+  owner_id: string;
+  bot_id: string;
   name: string;
   created_at: string;
 };
-export type WorkflowWithNodes = Workflow & {
+export type WorkflowWithNodes = {
+  workflow: Workflow;
   nodes: WorkflowNode[];
   edges: WorkflowEdge[];
 };
 export type WorkflowNode = {
-  id: number;
-  workflow: number;
+  id: string;
+  workflow: string;
   node_type: string;
   name: string;
   position: { x: number; y: number };
   data: Record<string, unknown>;
 };
 export type WorkflowEdge = {
-  id: number;
-  workflow: number;
-  source: number;
-  target: number;
+  id: string;
+  workflow: string;
+  source: string;
+  target: string;
 };
 export type UpdateWorkflowInput = {
   id: string;
-  data: {
-    nodes: WorkflowNode[];
-    edges: WorkflowEdge[];
-  };
+  nodes: Omit<WorkflowNode, 'workflow'>[];
+  edges: Omit<WorkflowEdge, 'workflow'>[];
 };
 
 class WorkflowApiClient {
@@ -52,7 +51,7 @@ class WorkflowApiClient {
     const res = await fetch(`${API_URL}/${id}/full`);
     return this.handleResponse<WorkflowWithNodes>(res);
   }
-  async update({ id, data: { nodes, edges } }: UpdateWorkflowInput) {
+  async update({ id, nodes, edges }: UpdateWorkflowInput) {
     const fetchProps: RequestInit = {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },

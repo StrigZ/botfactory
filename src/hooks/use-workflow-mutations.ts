@@ -15,8 +15,8 @@ export function useWorkflowMutations() {
   const queryClient = getQueryClient();
 
   const updateWorkflowMutation = useMutation({
-    mutationFn: ({ id, data }: UpdateWorkflowInput) =>
-      workflowApiClient.update({ id, data }),
+    mutationFn: ({ id, nodes, edges }: UpdateWorkflowInput) =>
+      workflowApiClient.update({ id, nodes, edges }),
     onSuccess: async (data, variables) => {
       await queryClient.setQueryData(
         workflowKeys.detailWithNodes(variables.id),

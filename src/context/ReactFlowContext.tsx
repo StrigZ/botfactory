@@ -87,7 +87,7 @@ export const useReactFlowContext = () => useContext(ReactFlowContext);
 
 export const extractNodesFromWorkflow = (workflow: WorkflowWithNodes): Node[] =>
   workflow.nodes.map((node) => ({
-    id: node.id.toString(),
+    id: node.id,
     name: node.name,
     position: node.position,
     data: node.data,
@@ -96,21 +96,17 @@ export const extractNodesFromWorkflow = (workflow: WorkflowWithNodes): Node[] =>
 
 export const extractEdgesFromWorkflow = (workflow: WorkflowWithNodes): Edge[] =>
   workflow.edges.map((edge) => ({
-    id: edge.id.toString(),
-    source: edge.source.toString(),
-    target: edge.target.toString(),
+    id: edge.id,
+    source: edge.source,
+    target: edge.target,
     animated: true,
   }));
 
 const getNodes = (workflow?: WorkflowWithNodes) =>
-  workflow && workflow.nodes.length
-    ? extractNodesFromWorkflow(workflow)
-    : DEFAULT_NODES;
+  workflow?.nodes.length ? extractNodesFromWorkflow(workflow) : DEFAULT_NODES;
 
 const getEdges = (workflow?: WorkflowWithNodes) =>
-  workflow && workflow.edges.length
-    ? extractEdgesFromWorkflow(workflow)
-    : DEFAULT_EDGES;
+  workflow?.edges.length ? extractEdgesFromWorkflow(workflow) : DEFAULT_EDGES;
 
 export default function ReactFlowContextProvider({
   botId,
@@ -160,24 +156,20 @@ export default function ReactFlowContextProvider({
     }
 
     updateWorkflow({
-      id: workflow.id.toString(),
-      data: {
-        edges: flow.edges.map((edge) => ({
-          id: +edge.id,
-          source: +edge.source,
-          target: +edge.target,
-          workflow: workflow.id,
-        })),
-        nodes: flow.nodes.map((node) => ({
-          id: +node.id,
-          name: (node.data.name as string) ?? '',
-          position: node.position,
-          node_type: node.type!,
-          workflow: +workflow.id,
-          data: node.data,
-          flowId: node.id,
-        })),
-      },
+      id: workflow.workflow.id,
+      edges: flow.edges.map((edge) => ({
+        id: edge.id,
+        source: edge.source,
+        target: edge.target,
+      })),
+      nodes: flow.nodes.map((node) => ({
+        id: node.id,
+        name: (node.data.name as string) ?? '',
+        position: node.position,
+        node_type: node.type!,
+        data: node.data,
+        flowId: node.id,
+      })),
     });
   }, [flowInstance, updateWorkflow, workflow]);
 
