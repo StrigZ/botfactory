@@ -20,9 +20,12 @@ export async function GET(
       credentials: 'include',
     },
   };
-
+  console.log(id);
   try {
-    const res = await fetch(`${API_URL}/workflows/${id}/full`, requestOption);
+    const res = await fetch(
+      `${API_URL}/workflows/bot/${id}/full/`,
+      requestOption,
+    );
 
     if (!res.ok) {
       throw new Error(
