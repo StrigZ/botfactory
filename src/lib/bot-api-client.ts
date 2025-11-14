@@ -10,6 +10,13 @@ export type Bot = {
   created_at: string;
 };
 
+export type GetAllResponse = {
+  count: number;
+  next: string;
+  previous: string;
+  results: Bot[];
+};
+
 export type CreateBotInput = {
   name: string;
   token: string;
@@ -48,7 +55,7 @@ class BotApiClient {
 
   async getAll() {
     const res = await fetch(`${API_URL}`);
-    return this.handleResponse<Bot[]>(res);
+    return this.handleResponse<GetAllResponse>(res);
   }
   async getById(id: string) {
     const res = await fetch(`${API_URL}/${id}`);

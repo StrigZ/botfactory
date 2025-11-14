@@ -14,10 +14,10 @@ export default function DashboardMain() {
 
   return (
     <div className="px-3xl pt-xl">
-      {data?.length ? (
+      {data?.results?.length ? (
         <>
           <Summary />
-          <BotTable bots={data} />
+          <BotTable bots={data.results} />
           <Link
             href="/dashboard/bots/create"
             className={buttonVariants({
