@@ -1,18 +1,12 @@
 'use client';
 
-import {
-  Handle,
-  type Node,
-  type NodeProps,
-  Position,
-  useReactFlow,
-} from '@xyflow/react';
+import { Handle, type NodeProps, Position, useReactFlow } from '@xyflow/react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
 
-export type MessageNode = Node<{ message: string }, 'message'>;
+import type { MessageNode } from './types';
 
 export default function MessageNode({
   data,
@@ -25,7 +19,7 @@ export default function MessageNode({
   const handleMessageChange = (text: string) => {
     flowInstance.setNodes((nodes) =>
       nodes.map((node) =>
-        node.id === id ? { ...node, data: { ...data, message: text } } : node,
+        node.id === id ? { ...node, data: { ...data, text } } : node,
       ),
     );
   };
@@ -43,7 +37,7 @@ export default function MessageNode({
             id="text"
             name="text"
             onChange={(e) => handleMessageChange(e.target.value)}
-            value={data.message ?? ''}
+            value={data.text ?? ''}
             className="nodrag"
             placeholder="Hello! Place your order:!"
             tabIndex={selectable ? 0 : -1}
