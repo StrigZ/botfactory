@@ -17,14 +17,12 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
   useState,
 } from 'react';
 
 import type { DraggableNodeData } from '~/components/BotPage/Workflow/DraggableNode';
 import { useWorkflowMutations } from '~/hooks/use-workflow-mutations';
-import { useWorkflowWithNodes } from '~/hooks/use-workflows';
 import type { WorkflowWithNodes } from '~/lib/workflow-api-client';
 
 type ReactFlowContext = {
@@ -86,28 +84,21 @@ export const extractEdgesFromWorkflow = (workflow: WorkflowWithNodes): Edge[] =>
   }));
 
 export default function ReactFlowContextProvider({
-  botId,
+  workflow,
   children,
 }: {
-  botId?: string;
+  workflow: WorkflowWithNodes;
   children: ReactNode;
 }) {
-  const { data: workflow } = useWorkflowWithNodes({ id: botId! });
-
-  const [nodes, setNodes] = useState<ReactFlowContext['nodes']>([]);
-  const [edges, setEdges] = useState<ReactFlowContext['edges']>([]);
+  const [nodes, setNodes] = useState<ReactFlowContext['nodes']>(
+    extractNodesFromWorkflow(workflow),
+  );
+  const [edges, setEdges] = useState<ReactFlowContext['edges']>(
+    extractEdgesFromWorkflow(workflow),
+  );
   const [flowInstance, setFlowInstance] = useState<ReactFlowInstance | null>(
     null,
   );
-
-  useEffect(() => {
-    if (!workflow) {
-      return;
-    }
-
-    setNodes(extractNodesFromWorkflow(workflow));
-    setEdges(extractEdgesFromWorkflow(workflow));
-  }, [workflow]);
 
   const { updateWorkflow } = useWorkflowMutations();
 

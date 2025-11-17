@@ -30,12 +30,7 @@ export default function Workflow({ isEnabled }: { isEnabled: boolean }) {
   } = useReactFlowContext();
 
   return (
-    <div className="relative flex-1">
-      {!isEnabled && (
-        <div className="font-heavy absolute inset-0 z-50 flex items-center justify-center text-xl">
-          Verify the token to unlock the workflow!
-        </div>
-      )}
+    <>
       <div
         className={cn('h-full border border-dashed bg-gray-300', {
           'pointer-events-none cursor-default blur-md backdrop-blur-md':
@@ -72,6 +67,6 @@ export default function Workflow({ isEnabled }: { isEnabled: boolean }) {
           <DraggableNode id="input" label="Input" type="input" />
         </div>
       </div>
-    </div>
+    </>
   );
 }

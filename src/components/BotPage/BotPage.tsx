@@ -3,8 +3,6 @@
 import { AppSidebar } from '~/components/AppSidebar';
 import { SiteHeader } from '~/components/SiteHeader';
 import { SidebarInset, SidebarProvider } from '~/components/ui/sidebar';
-import DnDContextProvider from '~/context/DnDContext';
-import ReactFlowContextProvider from '~/context/ReactFlowContext';
 import { withAuth } from '~/hooks/use-auth';
 
 import BotPageContent from './BotPageContent';
@@ -23,11 +21,7 @@ function BotPage({ botId }: Props) {
       <AppSidebar variant="inset" />
       <SidebarInset>
         <SiteHeader />
-        <ReactFlowContextProvider botId={botId}>
-          <DnDContextProvider>
-            <BotPageContent botId={botId} />
-          </DnDContextProvider>
-        </ReactFlowContextProvider>
+        <BotPageContent botId={botId} />
       </SidebarInset>
     </SidebarProvider>
   );
