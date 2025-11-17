@@ -51,13 +51,13 @@ class WorkflowApiClient {
     const res = await fetch(`${API_URL}/${id}/full`);
     return this.handleResponse<WorkflowWithNodes>(res);
   }
-  async update({ id, nodes, edges }: UpdateWorkflowInput) {
+  async update(data: UpdateWorkflowInput) {
     const fetchProps: RequestInit = {
-      method: 'PATCH',
+      method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ edges, nodes }),
+      body: JSON.stringify(data),
     };
-    const res = await fetch(`${API_URL}/${id}`, fetchProps);
+    const res = await fetch(`${API_URL}/sync`, fetchProps);
     return this.handleResponse<Workflow>(res);
   }
 }
