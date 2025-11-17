@@ -14,7 +14,7 @@ export type WorkflowWithNodes = {
 };
 export type WorkflowNode = {
   id: string;
-  workflow: string;
+  workflow_id: string;
   node_type: string;
   name: string;
   position: { x: number; y: number };
@@ -22,14 +22,14 @@ export type WorkflowNode = {
 };
 export type WorkflowEdge = {
   id: string;
-  workflow: string;
-  source: string;
-  target: string;
+  workflow_id: string;
+  source_id: string;
+  target_id: string;
 };
 export type UpdateWorkflowInput = {
   id: string;
-  nodes: Omit<WorkflowNode, 'workflow'>[];
-  edges: Omit<WorkflowEdge, 'workflow'>[];
+  nodes: Omit<WorkflowNode, 'workflow_id'>[];
+  edges: Omit<WorkflowEdge, 'workflow_id'>[];
 };
 
 class WorkflowApiClient {
