@@ -11,6 +11,7 @@ import {
   applyEdgeChanges,
   applyNodeChanges,
 } from '@xyflow/react';
+import { useParams } from 'next/navigation';
 import {
   type ReactNode,
   createContext,
@@ -102,7 +103,7 @@ export default function ReactFlowContextProvider({
   >(null);
 
   const { updateWorkflow } = useWorkflowMutations();
-
+  const { botId } = useParams<{ botId: string }>();
   const onInit: ReactFlowContext['onInit'] = useCallback(
     (instance) => setFlowInstance(instance),
     [],
@@ -130,7 +131,7 @@ export default function ReactFlowContextProvider({
     const flowInstanceObject = flowInstance.toObject();
 
     updateWorkflow({
-      id: workflow.workflow.id,
+      id: botId,
       edges: flowInstanceObject.edges.map((edge) => ({
         id: edge.id,
         source_id: edge.source,
@@ -144,7 +145,7 @@ export default function ReactFlowContextProvider({
         data: (({ name: _name, ...rest }) => rest)(node.data),
       })),
     });
-  }, [flowInstance, updateWorkflow, workflow]);
+  }, [botId, flowInstance, updateWorkflow]);
 
   const createNewFlowNode: ReactFlowContext['createNewFlowNode'] = useCallback(
     (data, position) => {
