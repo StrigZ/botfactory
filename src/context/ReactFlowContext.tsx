@@ -2,7 +2,6 @@
 
 import {
   type Edge,
-  type Node,
   type OnConnect,
   type OnEdgesChange,
   type OnNodesChange,
@@ -22,15 +21,16 @@ import {
 } from 'react';
 
 import type { DraggableNodeData } from '~/components/BotPage/Workflow/DraggableNode';
+import type { BaseNode } from '~/components/BotPage/Workflow/nodes/types';
 import { useWorkflowMutations } from '~/hooks/use-workflow-mutations';
 import type { WorkflowWithNodes } from '~/lib/workflow-api-client';
 
 type ReactFlowContext = {
-  nodes: Node[];
+  nodes: BaseNode[];
   edges: Edge[];
-  flowInstance: ReactFlowInstance | null;
-  onInit: (instance: ReactFlowInstance) => void;
-  onNodesChange: OnNodesChange;
+  flowInstance: ReactFlowInstance<BaseNode> | null;
+  onInit: (instance: ReactFlowInstance<BaseNode>) => void;
+  onNodesChange: OnNodesChange<BaseNode>;
   onEdgesChange: OnEdgesChange;
   onConnect: OnConnect;
   onSave: () => void;
@@ -66,12 +66,13 @@ const ReactFlowContext = createContext<ReactFlowContext>({
 
 export const useReactFlowContext = () => useContext(ReactFlowContext);
 
-export const extractNodesFromWorkflow = (workflow: WorkflowWithNodes): Node[] =>
+export const extractNodesFromWorkflow = (
+  workflow: WorkflowWithNodes,
+): BaseNode[] =>
   workflow.nodes.map((node) => ({
     id: node.id,
-    name: node.name,
     position: node.position,
-    data: node.data,
+    data: { name: node.name, ...node.data },
     type: node.node_type,
   }));
 
@@ -96,14 +97,14 @@ export default function ReactFlowContextProvider({
   const [edges, setEdges] = useState<ReactFlowContext['edges']>(
     extractEdgesFromWorkflow(workflow),
   );
-  const [flowInstance, setFlowInstance] = useState<ReactFlowInstance | null>(
-    null,
-  );
+  const [flowInstance, setFlowInstance] = useState<
+    ReactFlowContext['flowInstance'] | null
+  >(null);
 
   const { updateWorkflow } = useWorkflowMutations();
 
   const onInit: ReactFlowContext['onInit'] = useCallback(
-    (instance: ReactFlowInstance) => setFlowInstance(instance),
+    (instance) => setFlowInstance(instance),
     [],
   );
 
@@ -122,22 +123,22 @@ export default function ReactFlowContextProvider({
   );
 
   const onSave: ReactFlowContext['onSave'] = useCallback(() => {
-    const flow = flowInstance?.toObject();
-
-    if (!flow || !workflow) {
+    if (!flowInstance) {
       return;
     }
 
+    const flowInstanceObject = flowInstance.toObject();
+
     updateWorkflow({
       id: workflow.workflow.id,
-      edges: flow.edges.map((edge) => ({
+      edges: flowInstanceObject.edges.map((edge) => ({
         id: edge.id,
         source_id: edge.source,
         target_id: edge.target,
       })),
-      nodes: flow.nodes.map((node) => ({
+      nodes: flowInstanceObject.nodes.map((node) => ({
         id: node.id,
-        name: (node.data.name as string) ?? '',
+        name: node.data.name,
         position: node.position,
         node_type: node.type!,
         data: node.data,
@@ -148,17 +149,18 @@ export default function ReactFlowContextProvider({
 
   const createNewFlowNode: ReactFlowContext['createNewFlowNode'] = useCallback(
     (data, position) => {
-      const flowPosition = flowInstance?.screenToFlowPosition(position);
-      if (!flowPosition) return;
+      if (!flowInstance) return;
 
-      const newFlowNode: Node = {
+      const flowPosition = flowInstance.screenToFlowPosition(position);
+
+      const newFlowNode: BaseNode = {
         id: crypto.randomUUID(),
-        data: {},
+        data: { name: 'New Node' },
         type: data.type,
         position: flowPosition,
       };
 
-      flowInstance?.setNodes((nds) => nds.concat(newFlowNode));
+      flowInstance.setNodes((nds) => nds.concat(newFlowNode));
     },
     [flowInstance],
   );
