@@ -13,13 +13,6 @@ export const workflowKeys = {
     [...workflowKeys.detailsWithNodes(), id] as const,
 };
 
-export function useWorkflow({ id }: { id: string }) {
-  return useQuery({
-    queryKey: workflowKeys.detail(id),
-    queryFn: () => workflowApiClient.getById(id),
-  });
-}
-
 export function useWorkflowWithNodes({ id }: { id: string }) {
   return useQuery({
     queryKey: workflowKeys.detailWithNodes(id),

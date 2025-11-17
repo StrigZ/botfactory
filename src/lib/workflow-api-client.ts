@@ -43,12 +43,8 @@ class WorkflowApiClient {
     return res.json() as Promise<T>;
   }
 
-  async getById(id: string) {
-    const res = await fetch(`${API_URL}/${id}`);
-    return this.handleResponse<Workflow>(res);
-  }
   async getByIdWithNodes(id: string) {
-    const res = await fetch(`${API_URL}/${id}/full`);
+    const res = await fetch(`${API_URL}/${id}`);
     return this.handleResponse<WorkflowWithNodes>(res);
   }
   async update(data: UpdateWorkflowInput) {
@@ -57,7 +53,7 @@ class WorkflowApiClient {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     };
-    const res = await fetch(`${API_URL}/sync`, fetchProps);
+    const res = await fetch(`${API_URL}/${data.id}`, fetchProps);
     return this.handleResponse<Workflow>(res);
   }
 }

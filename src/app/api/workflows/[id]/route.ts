@@ -4,7 +4,6 @@ import type { NextRequest } from 'next/server';
 import { env } from '~/env';
 import type {
   UpdateWorkflowInput,
-  Workflow,
   WorkflowWithNodes,
 } from '~/lib/workflow-api-client';
 
@@ -24,44 +23,44 @@ export async function GET(
       credentials: 'include',
     },
   };
-
   try {
-    const res = await fetch(`${API_URL}/workflows/${id}/`, requestOption);
+    const res = await fetch(
+      `${API_URL}/workflows/bot/${id}/full/`,
+      requestOption,
+    );
 
     if (!res.ok) {
       throw new Error(
-        'Error during /api/workflows/id api call: ' + res.statusText,
+        'Error during /api/workflows/id/full api call: ' + res.statusText,
       );
     }
 
-    const data = (await res.json()) as Workflow;
+    const data = (await res.json()) as WorkflowWithNodes;
 
     return Response.json(data);
   } catch (e) {
     console.error(e);
-    return Response.json({
-      status: 500,
-      message: 'Unexpected error occurred during workflow fetching.',
-    });
+    return Response.json(
+      {
+        message: 'Unexpected error occurred during workflow fetching.',
+        e,
+      },
+      { status: 500 },
+    );
   }
 }
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { id: string } },
-) {
-  // eslint-disable-next-line @typescript-eslint/await-thenable
-  const { id } = await params;
+export async function PUT(request: NextRequest) {
   const requestData = (await request.json()) as UpdateWorkflowInput;
   const requestOption: RequestInit = {
-    method: 'PATCH',
+    method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
 
       Cookie: (await cookies()).toString(),
       credentials: 'include',
     },
-    body: JSON.stringify({ ...requestData, id: +id }),
+    body: JSON.stringify(requestData),
   };
 
   try {
