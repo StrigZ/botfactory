@@ -72,7 +72,7 @@ export const extractNodesFromWorkflow = (
   workflow.nodes.map((node) => ({
     id: node.id,
     position: node.position,
-    data: { name: node.name, ...node.data },
+    data: { ...node.data, name: node.name },
     type: node.node_type,
   }));
 
@@ -141,7 +141,7 @@ export default function ReactFlowContextProvider({
         name: node.data.name,
         position: node.position,
         node_type: node.type!,
-        data: node.data,
+        data: (({ name: _name, ...rest }) => rest)(node.data),
         flowId: node.id,
       })),
     });
