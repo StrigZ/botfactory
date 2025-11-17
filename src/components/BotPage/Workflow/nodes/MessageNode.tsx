@@ -16,10 +16,10 @@ export default function MessageNode({
   const flowInstance = useReactFlow();
 
   // TODO: there is probably way better way of doing this
-  const handleMessageChange = (text: string) => {
+  const handleMessageChange = (message: string) => {
     flowInstance.setNodes((nodes) =>
       nodes.map((node) =>
-        node.id === id ? { ...node, data: { ...data, text } } : node,
+        node.id === id ? { ...node, data: { ...data, message } } : node,
       ),
     );
   };
@@ -37,7 +37,7 @@ export default function MessageNode({
             id="text"
             name="text"
             onChange={(e) => handleMessageChange(e.target.value)}
-            value={data.text ?? ''}
+            value={data.message ?? ''}
             className="nodrag"
             placeholder="Hello! Place your order:!"
             tabIndex={selectable ? 0 : -1}

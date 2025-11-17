@@ -6,8 +6,8 @@ type BaseNode<
   NodeType extends string = string,
 > = Node<NodeBaseData & NodeData, NodeType>;
 
-type InputNodeData = { text: string; variableName: string };
-type MessageNodeData = { text: string };
+type InputNodeData = { message: string; variableName: string };
+type MessageNodeData = { message: string };
 
 export type InputNode = BaseNode<InputNodeData, 'input'>;
 export type MessageNode = BaseNode<MessageNodeData, 'message'>;
