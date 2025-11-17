@@ -142,7 +142,6 @@ export default function ReactFlowContextProvider({
         position: node.position,
         node_type: node.type!,
         data: (({ name: _name, ...rest }) => rest)(node.data),
-        flowId: node.id,
       })),
     });
   }, [flowInstance, updateWorkflow, workflow]);
