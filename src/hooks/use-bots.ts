@@ -1,21 +1,13 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useSuspenseQuery } from '@tanstack/react-query';
 
-import { botApiClient } from '~/lib/bot-api-client';
-import { botKeys } from '~/lib/query-keys';
+import { botOptions, botsOptions } from '~/lib/bot-query-options';
 
 export function useBot({ id }: { id: string }) {
-  return useQuery({
-    queryKey: botKeys.detail(id),
-    queryFn: () => botApiClient.getById(id),
-    enabled: !!id,
-  });
+  return useSuspenseQuery(botOptions({ id }));
 }
 
 export function useBots() {
-  return useQuery({
-    queryKey: botKeys.details(),
-    queryFn: () => botApiClient.getAll(),
-  });
+  return useSuspenseQuery(botsOptions());
 }

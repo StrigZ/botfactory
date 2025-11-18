@@ -1,11 +1,10 @@
+import { HydrationBoundary, dehydrate } from '@tanstack/react-query';
 import { ThemeProvider } from 'next-themes';
 
 import BotPage from '~/components/BotPage/BotPage';
-import { botKeys } from '~/hooks/use-bots';
-import { workflowKeys } from '~/hooks/use-workflows';
-import { botApiClient } from '~/lib/bot-api-client';
+import { botOptions } from '~/lib/bot-query-options';
 import { getQueryClient } from '~/lib/query-client';
-import { workflowApiClient } from '~/lib/workflow-api-client';
+import { workflowOptions } from '~/lib/workflow-query-options';
 
 export default async function Page({
   params,
@@ -15,23 +14,19 @@ export default async function Page({
   const queryClient = getQueryClient();
   const { botId } = await params;
 
-  // await queryClient.prefetchQuery({
-  //   queryKey: botKeys.detail(botId),
-  //   queryFn: () => botApiClient.getById(botId),
-  // });
-  // await queryClient.prefetchQuery({
-  //   queryKey: workflowKeys.detailWithNodes(botId),
-  //   queryFn: () => workflowApiClient.getById(botId),
-  // });
+  await queryClient.prefetchQuery(botOptions({ id: botId }));
+  await queryClient.prefetchQuery(workflowOptions({ id: botId }));
 
   return (
-    <ThemeProvider
-      attribute="class"
-      defaultTheme="system"
-      enableSystem
-      disableTransitionOnChange
-    >
-      <BotPage botId={botId} />
-    </ThemeProvider>
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="system"
+        enableSystem
+        disableTransitionOnChange
+      >
+        <BotPage botId={botId} />
+      </ThemeProvider>
+    </HydrationBoundary>
   );
 }
