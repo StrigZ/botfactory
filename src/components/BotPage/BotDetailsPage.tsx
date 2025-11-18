@@ -8,8 +8,8 @@ import { withAuth } from '~/hooks/use-auth';
 import { useBot } from '~/hooks/use-bots';
 import { useWorkflowWithNodes } from '~/hooks/use-workflows';
 
-import CreateOrUpdateForm from '../CreateOrUpdateForm';
 import LoadingSpinner from '../LoadingSpinner';
+import UpdateBotForm from '../UpdateBotForm';
 import Workflow from './Workflow/Workflow';
 
 type Props = { botId: string };
@@ -21,7 +21,7 @@ function BotDetailsPage({ botId }: Props) {
     <div className="flex h-full overflow-hidden p-0">
       <div className="min-w-xs p-8">
         <Suspense fallback={<LoadingSpinner />}>
-          <CreateOrUpdateForm botData={botData} isEditableByDefault={false} />
+          <UpdateBotForm botData={botData} />
         </Suspense>
       </div>
 

@@ -4,7 +4,6 @@ export type Bot = {
   id: string;
   owner_id: string;
   name: string;
-  token: string;
   username: string;
   is_deployed: boolean;
   created_at: string;

@@ -2,13 +2,13 @@
 
 import { withAuth } from '~/hooks/use-auth';
 
-import CreateOrUpdateForm from '../CreateOrUpdateForm';
+import CreateBotForm from '../CreateBotForm';
 
 function BotCreatePage() {
   return (
     <div className="flex h-full overflow-hidden p-0">
       <div className="min-w-xs p-8">
-        <CreateOrUpdateForm isEditableByDefault />
+        <CreateBotForm />
       </div>
 
       <div className="relative flex-1">
