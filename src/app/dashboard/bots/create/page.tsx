@@ -1,5 +1,5 @@
-import BotPage from '~/components/BotPage/BotPage';
+import BotCreatePage from '~/components/BotPage/BotCreatePage';
 
 export default async function Page() {
-  return <BotPage />;
+  return <BotCreatePage />;
 }

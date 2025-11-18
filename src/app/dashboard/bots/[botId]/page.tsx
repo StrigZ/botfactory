@@ -1,4 +1,4 @@
-import BotPage from '~/components/BotPage/BotPage';
+import BotDetailsPage from '~/components/BotPage/BotDetailsPage';
 import { botOptions } from '~/lib/bot-query-options';
 import { getQueryClient } from '~/lib/query-client';
 import { workflowOptions } from '~/lib/workflow-query-options';
@@ -14,5 +14,5 @@ export default async function Page({
   await queryClient.prefetchQuery(botOptions({ id: botId }));
   await queryClient.prefetchQuery(workflowOptions({ id: botId }));
 
-  return <BotPage botId={botId} />;
+  return <BotDetailsPage botId={botId} />;
 }
