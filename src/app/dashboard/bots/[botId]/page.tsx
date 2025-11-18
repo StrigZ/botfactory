@@ -1,6 +1,3 @@
-import { HydrationBoundary, dehydrate } from '@tanstack/react-query';
-import { ThemeProvider } from 'next-themes';
-
 import BotPage from '~/components/BotPage/BotPage';
 import { botOptions } from '~/lib/bot-query-options';
 import { getQueryClient } from '~/lib/query-client';
@@ -17,16 +14,5 @@ export default async function Page({
   await queryClient.prefetchQuery(botOptions({ id: botId }));
   await queryClient.prefetchQuery(workflowOptions({ id: botId }));
 
-  return (
-    <HydrationBoundary state={dehydrate(queryClient)}>
-      <ThemeProvider
-        attribute="class"
-        defaultTheme="system"
-        enableSystem
-        disableTransitionOnChange
-      >
-        <BotPage botId={botId} />
-      </ThemeProvider>
-    </HydrationBoundary>
-  );
+  return <BotPage botId={botId} />;
 }

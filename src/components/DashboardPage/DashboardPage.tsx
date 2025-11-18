@@ -1,27 +1,45 @@
 'use client';
 
-import { AppSidebar } from '~/components/AppSidebar';
-import DashboardMain from '~/components/DashboardPage/DashboardMain';
-import { SiteHeader } from '~/components/SiteHeader';
-import { SidebarInset, SidebarProvider } from '~/components/ui/sidebar';
+import { Plus } from 'lucide-react';
+import Link from 'next/link';
+
 import { withAuth } from '~/hooks/use-auth';
+import { useBots } from '~/hooks/use-bots';
+
+import Summary from '../Summary';
+import { buttonVariants } from '../ui/button';
+import BotTable from './BotTable/BotTable';
 
 function DashboardPage() {
+  const { data } = useBots();
+
   return (
-    <SidebarProvider
-      style={
-        {
-          '--sidebar-width': 'calc(var(--spacing) * 72)',
-          '--header-height': 'calc(var(--spacing) * 12)',
-        } as React.CSSProperties
-      }
-    >
-      <AppSidebar variant="inset" />
-      <SidebarInset className="relative">
-        <SiteHeader />
-        <DashboardMain />
-      </SidebarInset>
-    </SidebarProvider>
+    <div className="px-3xl pt-xl">
+      {data?.results?.length ? (
+        <>
+          <Summary />
+          <BotTable bots={data.results} />
+          <Link
+            href="/dashboard/bots/create"
+            className={buttonVariants({
+              variant: 'default',
+              className: 'ml-auto flex!',
+            })}
+          >
+            New <Plus />
+          </Link>
+        </>
+      ) : (
+        <div className="gap-base flex items-center justify-center">
+          <Link
+            href="/dashboard/bots/create"
+            className={buttonVariants({ variant: 'default' })}
+          >
+            Create your first bot!
+          </Link>
+        </div>
+      )}
+    </div>
   );
 }
 
