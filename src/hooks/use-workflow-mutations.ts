@@ -4,12 +4,11 @@ import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 import { getQueryClient } from '~/lib/query-client';
+import { workflowKeys } from '~/lib/query-keys';
 import {
   type UpdateWorkflowInput,
   workflowApiClient,
 } from '~/lib/workflow-api-client';
-
-import { workflowKeys } from './use-workflows';
 
 export function useWorkflowMutations() {
   const queryClient = getQueryClient();

@@ -13,8 +13,7 @@ import {
   botApiClient,
 } from '~/lib/bot-api-client';
 import { getQueryClient } from '~/lib/query-client';
-
-import { botKeys } from './use-bots';
+import { botKeys } from '~/lib/query-keys';
 
 export function useBotMutations() {
   const queryClient = getQueryClient();
