@@ -1,13 +1,13 @@
 'use client';
 
 import type { ColumnDef } from '@tanstack/react-table';
-import { ArrowUpDown, Circle, SquareArrowOutUpRight } from 'lucide-react';
-import Link from 'next/link';
+import { ArrowUpDown, Circle } from 'lucide-react';
 
-import { Button, buttonVariants } from '~/components/ui/button';
-import { useBotMutations } from '~/hooks/use-bot-mutations';
+import { Button } from '~/components/ui/button';
 import type { Bot } from '~/lib/bot-api-client';
 import { cn } from '~/lib/utils';
+
+import BotTableActions from './BotTableActions';
 
 export const columns: ColumnDef<Bot>[] = [
   {
@@ -76,47 +76,6 @@ export const columns: ColumnDef<Bot>[] = [
   },
   {
     id: 'actions',
-    cell: ({ row }) => {
-      // eslint-disable-next-line react-hooks/rules-of-hooks
-      const { deployBot, pauseBot, isDeploying, isPausing } = useBotMutations();
-      const bot = row.original;
-
-      const isLoading = isDeploying || isPausing;
-
-      const getDisplayText = () => {
-        if (isPausing) {
-          return 'Pausing...';
-        } else if (isDeploying) {
-          return 'Deploying...';
-        } else if (bot.is_deployed) {
-          return 'Pause';
-        } else if (!bot.is_deployed) {
-          return 'Deploy';
-        }
-      };
-
-      return (
-        <div className="ml-auto flex items-center justify-end gap-1">
-          <Button
-            className={cn('cursor-pointer', { 'cursor-none': isLoading })}
-            onClick={() =>
-              bot.is_deployed
-                ? pauseBot({ id: bot.id })
-                : deployBot({ id: bot.id })
-            }
-            disabled={isLoading}
-            variant={bot.is_deployed ? 'destructive' : 'default'}
-          >
-            {getDisplayText()}
-          </Button>
-          <Link
-            href={`/dashboard/bots/${bot.id}`}
-            className={buttonVariants({ variant: 'link' })}
-          >
-            <SquareArrowOutUpRight />
-          </Link>
-        </div>
-      );
-    },
+    cell: ({ row }) => <BotTableActions botData={row.original} />,
   },
 ];
