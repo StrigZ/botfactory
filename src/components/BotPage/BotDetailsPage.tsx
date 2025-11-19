@@ -9,7 +9,7 @@ import { useBot } from '~/hooks/use-bots';
 import { useWorkflowWithNodes } from '~/hooks/use-workflows';
 
 import LoadingSpinner from '../LoadingSpinner';
-import UpdateBotForm from '../UpdateBotForm';
+import SingleFieldFormWrapper from '../SingleFieldFormWrapper';
 import Workflow from './Workflow/Workflow';
 
 type Props = { botId: string };
@@ -19,9 +19,18 @@ function BotDetailsPage({ botId }: Props) {
 
   return (
     <div className="flex h-full overflow-hidden p-0">
-      <div className="min-w-xs p-8">
+      <div className="space-y-2 p-8">
         <Suspense fallback={<LoadingSpinner />}>
-          <UpdateBotForm botData={botData} />
+          <SingleFieldFormWrapper
+            botData={botData}
+            fieldName="name"
+            placeholder="AI agent"
+          />
+          <SingleFieldFormWrapper
+            botData={botData}
+            fieldName="token"
+            placeholder="0123456789:ASkD8FzC8DFt8DXdS8-AcD8FAbSDF"
+          />
         </Suspense>
       </div>
 
