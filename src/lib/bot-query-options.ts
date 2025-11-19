@@ -12,6 +12,6 @@ export const botOptions = ({ id }: { id: string }) =>
 
 export const botsOptions = () =>
   queryOptions({
-    queryKey: botKeys.details(),
+    queryKey: botKeys.lists(),
     queryFn: () => botApiClient.getAll(),
   });

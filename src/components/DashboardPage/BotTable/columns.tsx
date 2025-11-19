@@ -29,9 +29,6 @@ export const columns: ColumnDef<Bot>[] = [
     },
     cell: (info) => {
       const status = info.renderValue() as boolean;
-      const getDisplayText = () => {
-        return status ? 'Deployed' : 'Paused';
-      };
 
       return (
         <div className="flex items-center gap-1 text-center">
@@ -42,7 +39,7 @@ export const columns: ColumnDef<Bot>[] = [
             })}
             size={16}
           />
-          {getDisplayText()}
+          {status ? 'Deployed' : 'Paused'}
         </div>
       );
     },
