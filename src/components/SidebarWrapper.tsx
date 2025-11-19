@@ -1,16 +1,13 @@
 'use client';
 
+import type { ReactNode } from 'react';
+
 import { AppSidebar } from '~/components/AppSidebar';
 import { SiteHeader } from '~/components/SiteHeader';
 import { SidebarInset, SidebarProvider } from '~/components/ui/sidebar';
-import DnDContextProvider from '~/context/DnDContext';
-import ReactFlowContextProvider from '~/context/ReactFlowContext';
-import { withAuth } from '~/hooks/use-auth';
 
-import BotPageContent from './BotPageContent';
-
-type Props = { botId?: string };
-function BotPage({ botId }: Props) {
+type Props = { children: ReactNode };
+export default function SidebarWrapper({ children }: Props) {
   return (
     <SidebarProvider
       style={
@@ -23,14 +20,8 @@ function BotPage({ botId }: Props) {
       <AppSidebar variant="inset" />
       <SidebarInset>
         <SiteHeader />
-        <ReactFlowContextProvider botId={botId}>
-          <DnDContextProvider>
-            <BotPageContent botId={botId} />
-          </DnDContextProvider>
-        </ReactFlowContextProvider>
+        {children}
       </SidebarInset>
     </SidebarProvider>
   );
 }
-
-export default withAuth(BotPage);

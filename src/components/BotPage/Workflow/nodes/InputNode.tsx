@@ -1,21 +1,12 @@
 'use client';
 
-import {
-  Handle,
-  type Node,
-  type NodeProps,
-  Position,
-  useReactFlow,
-} from '@xyflow/react';
+import { Handle, type NodeProps, Position, useReactFlow } from '@xyflow/react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
 
-export type InputNode = Node<
-  { message: string; variableName: string },
-  'input'
->;
+import type { InputNode } from './types';
 
 export default function InputNode({
   data,
@@ -25,10 +16,10 @@ export default function InputNode({
   const flowInstance = useReactFlow();
 
   // TODO: there is probably way better way of doing this
-  const handleMessageChange = (text: string) => {
+  const handleMessageChange = (message: string) => {
     flowInstance.setNodes((nodes) =>
       nodes.map((node) =>
-        node.id === id ? { ...node, data: { ...data, message: text } } : node,
+        node.id === id ? { ...node, data: { ...data, message } } : node,
       ),
     );
   };

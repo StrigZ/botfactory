@@ -1,13 +1,13 @@
 'use client';
 
 import type { ColumnDef } from '@tanstack/react-table';
-import { ArrowUpDown, Circle, SquareArrowOutUpRight } from 'lucide-react';
-import Link from 'next/link';
+import { ArrowUpDown, Circle } from 'lucide-react';
 
-import { Button, buttonVariants } from '~/components/ui/button';
+import { Button } from '~/components/ui/button';
+import type { Bot } from '~/lib/bot-api-client';
 import { cn } from '~/lib/utils';
-import type { Bot, BotStatus } from '~/server/db/schema';
-import { api } from '~/trpc/react';
+
+import BotTableActions from './BotTableActions';
 
 export const columns: ColumnDef<Bot>[] = [
   {
@@ -15,7 +15,7 @@ export const columns: ColumnDef<Bot>[] = [
     header: '',
   },
   {
-    accessorKey: 'status',
+    accessorKey: 'is_deployed',
     header: ({ column }) => {
       return (
         <Button
@@ -28,32 +28,18 @@ export const columns: ColumnDef<Bot>[] = [
       );
     },
     cell: (info) => {
-      const status = info.renderValue() as BotStatus;
-
-      const getDisplayText = () => {
-        switch (status) {
-          case 'published':
-            return 'Active';
-          case 'paused':
-            return 'Paused';
-          case 'draft':
-            return 'Draft';
-          default:
-            break;
-        }
-      };
+      const status = info.renderValue() as boolean;
 
       return (
         <div className="flex items-center gap-1 text-center">
           <Circle
             className={cn({
-              'animate-pulse fill-green-300': status === 'published',
-              'fill-orange-300': status === 'paused',
-              'fill-gray-300': status === 'draft',
+              'animate-pulse fill-green-300': status,
+              'fill-orange-300': !status,
             })}
             size={16}
           />
-          {getDisplayText()}
+          {status ? 'Deployed' : 'Paused'}
         </div>
       );
     },
@@ -87,56 +73,6 @@ export const columns: ColumnDef<Bot>[] = [
   },
   {
     id: 'actions',
-    cell: ({ row }) => {
-      const bot = row.original;
-      const isPublished = bot.status === 'published';
-      const utils = api.useUtils();
-      const deployBot = api.bot.deploy.useMutation({
-        onSuccess: async () => {
-          await utils.bot.getAll.invalidate();
-        },
-      });
-      const undeployBot = api.bot.undeploy.useMutation({
-        onSuccess: async () => {
-          await utils.bot.getAll.invalidate();
-        },
-      });
-      const isLoading = deployBot.isPending || undeployBot.isPending;
-
-      const getDisplayText = () => {
-        if (undeployBot.isPending) {
-          return 'Pausing...';
-        } else if (deployBot.isPending) {
-          return 'Deploying...';
-        } else if (isPublished) {
-          return 'Pause';
-        } else if (!isPublished) {
-          return 'Deploy';
-        }
-      };
-
-      return (
-        <div className="ml-auto flex items-center justify-end gap-1">
-          <Button
-            className={cn('cursor-pointer', { 'cursor-none': isLoading })}
-            onClick={() =>
-              isPublished
-                ? undeployBot.mutate({ id: bot.id })
-                : deployBot.mutate({ id: bot.id })
-            }
-            disabled={isLoading}
-            variant={isPublished ? 'destructive' : 'default'}
-          >
-            {getDisplayText()}
-          </Button>
-          <Link
-            href={`/dashboard/bots/${bot.id}`}
-            className={buttonVariants({ variant: 'link' })}
-          >
-            <SquareArrowOutUpRight />
-          </Link>
-        </div>
-      );
-    },
+    cell: ({ row }) => <BotTableActions botData={row.original} />,
   },
 ];

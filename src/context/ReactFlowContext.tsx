@@ -2,7 +2,6 @@
 
 import {
   type Edge,
-  type Node,
   type OnConnect,
   type OnEdgesChange,
   type OnNodesChange,
@@ -12,6 +11,7 @@ import {
   applyEdgeChanges,
   applyNodeChanges,
 } from '@xyflow/react';
+import { useParams } from 'next/navigation';
 import {
   type ReactNode,
   createContext,
@@ -22,16 +22,16 @@ import {
 } from 'react';
 
 import type { DraggableNodeData } from '~/components/BotPage/Workflow/DraggableNode';
-import type { BotWorkflowWithNodesAndEdges } from '~/lib/telegram/bot-service';
-import type { NodeType } from '~/server/db/schema';
-import { api } from '~/trpc/react';
+import type { BaseNode } from '~/components/BotPage/Workflow/nodes/types';
+import { useWorkflowMutations } from '~/hooks/use-workflow-mutations';
+import type { WorkflowWithNodes } from '~/lib/workflow-api-client';
 
 type ReactFlowContext = {
-  nodes: Node[];
+  nodes: BaseNode[];
   edges: Edge[];
-  flowInstance: ReactFlowInstance | null;
-  onInit: (instance: ReactFlowInstance) => void;
-  onNodesChange: OnNodesChange;
+  flowInstance: ReactFlowInstance<BaseNode> | null;
+  onInit: (instance: ReactFlowInstance<BaseNode>) => void;
+  onNodesChange: OnNodesChange<BaseNode>;
   onEdgesChange: OnEdgesChange;
   onConnect: OnConnect;
   onSave: () => void;
@@ -67,72 +67,45 @@ const ReactFlowContext = createContext<ReactFlowContext>({
 
 export const useReactFlowContext = () => useContext(ReactFlowContext);
 
-const defaultNodes = [
-  {
-    id: '1', // required
-    position: { x: 0, y: 0 }, // required
-    type: 'message',
-    data: {
-      message: 'I am the message node!',
-    },
-  },
-  {
-    id: '2', // required
-    position: { x: 250, y: 200 }, // required
-    type: 'input',
-    data: { message: 'I am the input node' }, // required
-  },
-];
-const defaultEdges = [{ id: '1-2', source: '1', target: '2' }];
+export const extractNodesFromWorkflow = (
+  workflow: WorkflowWithNodes,
+): BaseNode[] =>
+  workflow.nodes.map((node) => ({
+    id: node.id,
+    position: node.position,
+    data: { ...node.data, name: node.name },
+    type: node.node_type,
+  }));
 
-export const getNodes = (workflow?: BotWorkflowWithNodesAndEdges): Node[] =>
-  workflow && workflow.workflowNodes.length > 0
-    ? workflow.workflowNodes.map((node) => ({
-        id: node.id,
-        position: node.position as { x: number; y: number },
-        data: node.data as Record<string, string>,
-        type: node.type,
-      }))
-    : defaultNodes;
-
-export const getEdges = (workflow?: BotWorkflowWithNodesAndEdges): Edge[] =>
-  workflow && workflow.workflowNodes.length > 0
-    ? workflow.workflowEdges.map((edge) => ({
-        id: edge.id,
-        source: edge.sourceId,
-        target: edge.targetId,
-        animated: true,
-      }))
-    : defaultEdges;
+export const extractEdgesFromWorkflow = (workflow: WorkflowWithNodes): Edge[] =>
+  workflow.edges.map((edge) => ({
+    id: edge.id,
+    source: edge.source_id,
+    target: edge.target_id,
+    animated: true,
+  }));
 
 export default function ReactFlowContextProvider({
-  botId,
+  workflow,
   children,
 }: {
-  botId?: string;
+  workflow: WorkflowWithNodes;
   children: ReactNode;
 }) {
-  const { data: workflow } = api.workflow.getByBotId.useQuery(
-    {
-      id: botId!,
-    },
-    { enabled: !!botId },
-  );
-
   const [nodes, setNodes] = useState<ReactFlowContext['nodes']>(
-    getNodes(workflow),
+    extractNodesFromWorkflow(workflow),
   );
   const [edges, setEdges] = useState<ReactFlowContext['edges']>(
-    getEdges(workflow),
+    extractEdgesFromWorkflow(workflow),
   );
-  const [flowInstance, setFlowInstance] = useState<ReactFlowInstance | null>(
-    null,
-  );
+  const [flowInstance, setFlowInstance] = useState<
+    ReactFlowContext['flowInstance'] | null
+  >(null);
 
-  const updateWorkflow = api.workflow.update.useMutation();
-
+  const { updateWorkflow } = useWorkflowMutations();
+  const { botId } = useParams<{ botId: string }>();
   const onInit: ReactFlowContext['onInit'] = useCallback(
-    (instance: ReactFlowInstance) => setFlowInstance(instance),
+    (instance) => setFlowInstance(instance),
     [],
   );
 
@@ -151,44 +124,43 @@ export default function ReactFlowContextProvider({
   );
 
   const onSave: ReactFlowContext['onSave'] = useCallback(() => {
-    const flow = flowInstance?.toObject();
-
-    if (!flow) {
+    if (!flowInstance) {
       return;
     }
-    if (workflow) {
-      updateWorkflow.mutate({
-        id: workflow.id,
-        edges: flow.edges.map((edge) => ({
-          sourceId: edge.source,
-          targetId: edge.target,
-          workflowId: workflow.id,
-        })),
-        nodes: flow.nodes.map((node) => ({
-          name: 'not implemented',
-          position: node.position,
-          type: node.type as NodeType,
-          workflowId: workflow.id,
-          data: node.data,
-          flowId: node.id,
-        })),
-      });
-    }
-  }, [flowInstance, updateWorkflow, workflow]);
+
+    const flowInstanceObject = flowInstance.toObject();
+
+    updateWorkflow({
+      id: botId,
+      edges: flowInstanceObject.edges.map((edge) => ({
+        id: edge.id,
+        source_id: edge.source,
+        target_id: edge.target,
+      })),
+      nodes: flowInstanceObject.nodes.map((node) => ({
+        id: node.id,
+        name: node.data.name,
+        position: node.position,
+        node_type: node.type!,
+        data: (({ name: _name, ...rest }) => rest)(node.data),
+      })),
+    });
+  }, [botId, flowInstance, updateWorkflow]);
 
   const createNewFlowNode: ReactFlowContext['createNewFlowNode'] = useCallback(
     (data, position) => {
-      const flowPosition = flowInstance?.screenToFlowPosition(position);
-      if (!flowPosition) return;
+      if (!flowInstance) return;
 
-      const newFlowNode: Node = {
+      const flowPosition = flowInstance.screenToFlowPosition(position);
+
+      const newFlowNode: BaseNode = {
         id: crypto.randomUUID(),
-        data: {},
+        data: { name: 'New Node' },
         type: data.type,
         position: flowPosition,
       };
 
-      flowInstance?.setNodes((nds) => nds.concat(newFlowNode));
+      flowInstance.setNodes((nds) => nds.concat(newFlowNode));
     },
     [flowInstance],
   );

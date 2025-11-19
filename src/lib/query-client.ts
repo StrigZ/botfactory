@@ -1,8 +1,11 @@
 import {
   QueryClient,
   defaultShouldDehydrateQuery,
+  isServer,
 } from '@tanstack/react-query';
 import SuperJSON from 'superjson';
+
+let clientQueryClientSingleton: QueryClient | undefined = undefined;
 
 export const createQueryClient = () =>
   new QueryClient({
@@ -23,3 +26,14 @@ export const createQueryClient = () =>
       },
     },
   });
+
+export const getQueryClient = () => {
+  if (isServer) {
+    // Server: always make a new query client
+    return createQueryClient();
+  }
+  // Browser: use singleton pattern to keep the same query client
+  clientQueryClientSingleton ??= createQueryClient();
+
+  return clientQueryClientSingleton;
+};

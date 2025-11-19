@@ -1,16 +1,10 @@
-import { ThemeProvider } from 'next-themes';
-
 import DashboardPage from '~/components/DashboardPage/DashboardPage';
+import { botsOptions } from '~/lib/bot-query-options';
+import { getQueryClient } from '~/lib/query-client';
 
 export default async function Page() {
-  return (
-    <ThemeProvider
-      attribute="class"
-      defaultTheme="system"
-      enableSystem
-      disableTransitionOnChange
-    >
-      <DashboardPage />
-    </ThemeProvider>
-  );
+  const queryClient = getQueryClient();
+  await queryClient.prefetchQuery(botsOptions());
+
+  return <DashboardPage />;
 }

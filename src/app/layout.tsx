@@ -2,10 +2,8 @@ import '@xyflow/react/dist/style.css';
 import { type Metadata } from 'next';
 import { Geist } from 'next/font/google';
 
-import { Toaster } from '~/components/ui/sonner';
-import { AuthProvider } from '~/context/AuthContext';
+import Providers from '~/providers/providers';
 import '~/styles/globals.css';
-import { TRPCReactProvider } from '~/trpc/react';
 
 export const metadata: Metadata = {
   title: 'Bot Factory',
@@ -24,12 +22,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${geist.variable}`} suppressHydrationWarning>
       <body>
-        <TRPCReactProvider>
-          <AuthProvider>
-            {children}
-            <Toaster />
-          </AuthProvider>
-        </TRPCReactProvider>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

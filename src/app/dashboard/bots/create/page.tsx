@@ -1,16 +1,5 @@
-import { ThemeProvider } from 'next-themes';
-
-import BotPage from '~/components/BotPage/BotPage';
+import BotCreatePage from '~/components/BotPage/BotCreatePage';
 
 export default async function Page() {
-  return (
-    <ThemeProvider
-      attribute="class"
-      defaultTheme="system"
-      enableSystem
-      disableTransitionOnChange
-    >
-      <BotPage />
-    </ThemeProvider>
-  );
+  return <BotCreatePage />;
 }
