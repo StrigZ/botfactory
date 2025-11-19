@@ -1,42 +1,44 @@
 'use client';
 
-import { type ReactNode, createContext, useEffect, useState } from 'react';
+import {
+  type ReactNode,
+  createContext,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 
-export interface User {
+export type User = {
   id: string;
   email: string;
   first_name?: string;
   last_name?: string;
   avatar_url?: string;
-}
+};
 
-interface AuthContextType {
+type AuthContext = {
   user: User | null;
   loading: boolean;
-  // login: (email: string, password: string) => Promise<void>;
   loginWithGoogle: (credential: string) => Promise<void>;
-  // register: (email: string, password: string, name?: string) => Promise<void>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
-}
+};
 
-interface AuthResponse {
+type LoginResponse = {
   user: User;
-}
+};
 
-export const AuthContext = createContext<AuthContextType | undefined>(
-  undefined,
-);
+export const AuthContext = createContext<AuthContext | undefined>(undefined);
 
-interface AuthProviderProps {
+type AuthProviderProps = {
   children: ReactNode;
-}
+};
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthContext['user']>(null);
   const [loading, setLoading] = useState(true);
 
-  // Fetch current user on mount to restore session
   useEffect(() => {
     fetch('api/auth/me')
       .then((res) => {
@@ -50,60 +52,30 @@ export function AuthProvider({ children }: AuthProviderProps) {
       .finally(() => setLoading(false));
   }, []);
 
-  // const login = async (email: string, password: string): Promise<void> => {
-  //   try {
-  //     const response = await apiClient.post<AuthResponse>('/auth/login/', {
-  //       email,
-  //       password,
-  //     });
+  const loginWithGoogle: AuthContext['loginWithGoogle'] = useCallback(
+    async (credential) => {
+      try {
+        const requestOption: RequestInit = {
+          method: 'POST',
+          body: JSON.stringify({ token: credential }),
+        };
 
-  //     // The axios interceptor will automatically store the access token
-  //     setUser(response.data.user);
-  //   } catch (error) {
-  //     // Re-throw the error so the login component can handle it
-  //     throw error;
-  //   }
-  // };
+        const res = await fetch('api/auth/login', requestOption);
 
-  const loginWithGoogle = async (credential: string): Promise<void> => {
-    try {
-      const requestOption: RequestInit = {
-        method: 'POST',
-        body: JSON.stringify({ token: credential }),
-      };
-
-      const res = await fetch('api/auth/login', requestOption);
-
-      if (!res.ok) {
-        throw new Error(res.statusText);
+        if (!res.ok) {
+          throw new Error(res.statusText);
+        }
+        const data = (await res.json()) as LoginResponse;
+        setUser(data.user);
+      } catch (error) {
+        console.error('Error during google auth:', error);
+        throw error;
       }
-      const data = (await res.json()) as AuthResponse;
-      setUser(data.user);
-    } catch (error) {
-      console.error('Error during google auth:', error);
-      throw error;
-    }
-  };
+    },
+    [],
+  );
 
-  // const register = async (
-  //   email: string,
-  //   password: string,
-  //   name?: string,
-  // ): Promise<void> => {
-  //   try {
-  //     const response = await apiClient.post<AuthResponse>('/auth/register/', {
-  //       email,
-  //       password,
-  //       name,
-  //     });
-
-  //     setUser(response.data.user);
-  //   } catch (error) {
-  //     throw error;
-  //   }
-  // };
-
-  const logout = async (): Promise<void> => {
+  const logout: AuthContext['logout'] = useCallback(async () => {
     try {
       const requestOption: RequestInit = {
         method: 'POST',
@@ -119,21 +91,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } finally {
       setUser(null);
     }
-  };
+  }, []);
 
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        loading,
-        // login,
-        loginWithGoogle,
-        // register,
-        logout,
-        isAuthenticated: !!user,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+  const value: AuthContext = useMemo(
+    () => ({
+      user,
+      loading,
+      loginWithGoogle,
+      logout,
+      isAuthenticated: !!user,
+    }),
+    [loading, loginWithGoogle, logout, user],
   );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
