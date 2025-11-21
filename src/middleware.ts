@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server';
 
-import { getTokens, refreshToken } from './lib/auth';
+import { getTokens } from './lib/auth';
 
 const protectedRoutes = ['/dashboard'];
 const publicRoutes = ['/login', '/signup', '/'];
@@ -10,20 +10,15 @@ export default async function middleware(req: NextRequest) {
   const isProtectedRoute = protectedRoutes.includes(path);
   const isPublicRoute = publicRoutes.includes(path);
 
-  const { access, refresh } = await getTokens();
-  if (!access && refresh) {
-    await refreshToken();
-  }
+  const { refresh } = await getTokens();
 
-  const newAccess = access ?? (await getTokens()).access;
-
-  if (isProtectedRoute && !newAccess) {
+  if (isProtectedRoute && !refresh) {
     return NextResponse.redirect(new URL('/login', req.nextUrl));
   }
 
   if (
     isPublicRoute &&
-    newAccess &&
+    refresh &&
     !req.nextUrl.pathname.startsWith('/dashboard')
   ) {
     return NextResponse.redirect(new URL('/dashboard', req.nextUrl));

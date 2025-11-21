@@ -4,7 +4,8 @@ import type { NextRequest } from 'next/server';
 
 import type { User } from '~/context/AuthContext';
 import { env } from '~/env';
-import { saveTokensFromCookie } from '~/lib/auth';
+import { setTokens } from '~/lib/auth';
+import { getTokensFromCookies } from '~/lib/utils';
 
 type AuthProviderData = { token: string };
 type AuthData = { email: string; password: string };
@@ -43,7 +44,16 @@ export async function POST(request: NextRequest) {
 
     const data = (await res.json()) as ResponseData;
     const cookies = res.headers.getSetCookie();
-    await saveTokensFromCookie(cookies);
+    const tokens = await getTokensFromCookies(cookies);
+
+    if (!tokens) {
+      return Response.json(
+        {},
+        { status: 401, statusText: 'Authorization failed!' },
+      );
+    }
+
+    await setTokens(tokens);
 
     return Response.json({ user: data.user });
   } catch (e) {

@@ -5,6 +5,9 @@ import { cookies } from 'next/headers';
 
 import { env } from '~/env';
 
+import { djangoFetch } from './django-fetch';
+import { getTokensFromCookies } from './utils';
+
 const ACCESS_TOKEN_NAME = 'access_token';
 const REFRESH_TOKEN_NAME = 'refresh_token';
 
@@ -17,35 +20,12 @@ export async function getTokens() {
   };
 }
 
-export async function saveTokensFromCookie(cookies: string[]) {
-  let accessToken: string | undefined = undefined;
-  let refreshToken: string | undefined = undefined;
-
-  cookies.forEach((cookie) => {
-    const accessMatch = /(?:access_token|access)=([^;]+)/.exec(cookie);
-    if (accessMatch) {
-      accessToken = accessMatch[1];
-    }
-
-    const refreshMatch = /(?:refresh_token|refresh)=([^;]+)/.exec(cookie);
-    if (refreshMatch) {
-      refreshToken = refreshMatch[1];
-    }
-  });
-
-  if (!accessToken || !refreshToken) {
-    throw new Error('Tokens not found in cookies');
-  }
-
-  await setTokens({ access: accessToken, refresh: refreshToken });
-}
-
 export async function setTokens({
   access,
   refresh,
 }: {
-  access?: string;
-  refresh?: string;
+  access: string;
+  refresh: string;
 }) {
   const cookieStore = await cookies();
   const tokenCookieSettings: Omit<ResponseCookie, 'name' | 'value'> = {
@@ -55,41 +35,36 @@ export async function setTokens({
     path: '/',
   };
 
-  if (access) {
-    cookieStore.set(ACCESS_TOKEN_NAME, access, {
-      ...tokenCookieSettings,
-      maxAge: 60 * 60,
-    });
-  }
+  cookieStore.set(ACCESS_TOKEN_NAME, access, {
+    ...tokenCookieSettings,
+    maxAge: 60 * 60,
+  });
 
-  if (refresh) {
-    cookieStore.set(REFRESH_TOKEN_NAME, refresh, {
-      ...tokenCookieSettings,
-      maxAge: 60 * 60 * 24 * 15,
-    });
-  }
+  cookieStore.set(REFRESH_TOKEN_NAME, refresh, {
+    ...tokenCookieSettings,
+    maxAge: 60 * 60 * 24 * 15,
+  });
 }
 
-export async function deleteTokens() {
+export async function logout() {
   (await cookies()).set(ACCESS_TOKEN_NAME, '', { expires: new Date(0) });
   (await cookies()).set(REFRESH_TOKEN_NAME, '', { expires: new Date(0) });
 }
 
-export async function refreshToken() {
-  const res = await fetch(`${env.API_URL}/auth/jwt/refresh/`, {
+export async function refreshTokens() {
+  const res = await djangoFetch(`/auth/jwt/refresh/`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Cookie: (await cookies()).toString(),
-    },
-    credentials: 'include',
   });
+
   if (!res.ok) {
-    console.error(await res.text());
-    throw new Error(
-      'Error during token refreshing api call: ' + res.statusText,
-    );
+    const errorText = await res.text();
+    throw new Error(`Token refresh failed: ${res.statusText} - ${errorText}`);
   }
+
   const resCookies = res.headers.getSetCookie();
-  await saveTokensFromCookie(resCookies);
+
+  const tokens = await getTokensFromCookies(resCookies);
+  if (!tokens) throw new Error(`Couldn't find new tokens in response cookies`);
+
+  return tokens;
 }

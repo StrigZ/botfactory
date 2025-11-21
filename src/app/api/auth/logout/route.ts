@@ -1,21 +1,15 @@
 'use server';
 
-import { env } from '~/env';
-import { deleteTokens, getTokens } from '~/lib/auth';
+import { logout } from '~/lib/auth';
+import { djangoFetch } from '~/lib/django-fetch';
 
-const API_URL = env.API_URL ?? 'http://localhost:3000';
-
-export async function POST(request: Request) {
-  const { access } = await getTokens();
-  await deleteTokens();
-
+export async function POST() {
   try {
-    const requestOption: RequestInit = {
+    const res = await djangoFetch('/auth/logout/', {
       method: 'POST',
-      headers: { Authorization: `Bearer ${access}` },
-      credentials: 'include',
-    };
-    const res = await fetch(`${API_URL}/auth/logout/`, requestOption);
+    });
+    await logout();
+
     if (!res.ok) {
       throw new Error(
         'Error during /auth/users/logout/ api call: ' + res.statusText,
