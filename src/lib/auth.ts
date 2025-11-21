@@ -3,8 +3,6 @@
 import type { ResponseCookie } from 'next/dist/compiled/@edge-runtime/cookies';
 import { cookies } from 'next/headers';
 
-import { env } from '~/env';
-
 import { djangoFetch } from './django-fetch';
 import { getTokensFromCookies } from './utils';
 
@@ -47,6 +45,9 @@ export async function setTokens({
 }
 
 export async function logout() {
+  await djangoFetch('/auth/logout/', {
+    method: 'POST',
+  });
   (await cookies()).set(ACCESS_TOKEN_NAME, '', { expires: new Date(0) });
   (await cookies()).set(REFRESH_TOKEN_NAME, '', { expires: new Date(0) });
 }
