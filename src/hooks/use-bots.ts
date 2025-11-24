@@ -1,13 +1,13 @@
 'use client';
 
-import { useSuspenseQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 
 import { botOptions, botsOptions } from '~/lib/bot-query-options';
 
 export function useBot({ id }: { id: string }) {
-  return useSuspenseQuery(botOptions({ id }));
+  return useQuery(botOptions({ id }));
 }
 
 export function useBots() {
-  return useSuspenseQuery(botsOptions());
+  return useQuery(botsOptions());
 }

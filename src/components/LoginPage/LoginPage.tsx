@@ -86,8 +86,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      await loginWithGoogle(response.credential);
-      void router.push('/');
+      loginWithGoogle({ credentials: response.credential });
     } catch (err) {
       const axiosError = err as AxiosError<{
         message?: string;

@@ -1,13 +1,13 @@
 'use client';
 
-import {
-  type ReactNode,
-  createContext,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import { type ReactNode, createContext, useMemo } from 'react';
+
+import { useUser } from '~/hooks/use-user';
+import { useUserMutations } from '~/hooks/use-user-mutations';
+import type {
+  LoginWithGoogleInput,
+  UpdateUserInput,
+} from '~/lib/user-api-client';
 
 export type User = {
   id: string;
@@ -18,90 +18,48 @@ export type User = {
 };
 
 type AuthContext = {
-  user: User | null;
-  loading: boolean;
-  loginWithGoogle: (credential: string) => Promise<void>;
-  logout: () => Promise<void>;
+  user: User | null | undefined;
+  isLoading: boolean;
   isAuthenticated: boolean;
+  loginWithGoogle: (credentials: LoginWithGoogleInput) => void;
+  logout: () => void;
+  updateUser: (data: UpdateUserInput) => void;
 };
 
-type LoginResponse = {
-  user: User;
-};
-
-export const AuthContext = createContext<AuthContext | undefined>(undefined);
+export const AuthContext = createContext<AuthContext>({
+  user: null,
+  isLoading: false,
+  isAuthenticated: false,
+  loginWithGoogle(_credentials) {
+    //
+  },
+  logout() {
+    //
+  },
+  updateUser(_data) {
+    //
+  },
+});
 
 type AuthProviderProps = {
+  initialUser?: User | null;
   children: ReactNode;
 };
 
-export function AuthProvider({ children }: AuthProviderProps) {
-  const [user, setUser] = useState<AuthContext['user']>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch('api/auth/me')
-      .then((res) => {
-        if (!res.ok) {
-          return;
-        }
-        return res.json();
-      })
-      .then((data) => setUser(data as User))
-      .catch((_) => setUser(null))
-      .finally(() => setLoading(false));
-  }, []);
-
-  const loginWithGoogle: AuthContext['loginWithGoogle'] = useCallback(
-    async (credential) => {
-      try {
-        const requestOption: RequestInit = {
-          method: 'POST',
-          body: JSON.stringify({ token: credential }),
-        };
-
-        const res = await fetch('api/auth/login', requestOption);
-
-        if (!res.ok) {
-          throw new Error(res.statusText);
-        }
-        const data = (await res.json()) as LoginResponse;
-        setUser(data.user);
-      } catch (error) {
-        console.error('Error during google auth:', error);
-        throw error;
-      }
-    },
-    [],
-  );
-
-  const logout: AuthContext['logout'] = useCallback(async () => {
-    try {
-      const requestOption: RequestInit = {
-        method: 'POST',
-      };
-
-      const res = await fetch('api/auth/logout', requestOption);
-
-      if (!res.ok) {
-        throw new Error(res.statusText);
-      }
-    } catch (error) {
-      console.error('Logout error:', error);
-    } finally {
-      setUser(null);
-    }
-  }, []);
+export function AuthProvider({ initialUser, children }: AuthProviderProps) {
+  const { data: user, isLoading } = useUser({ initialUser });
+  const { loginWithGoogle, logout, updateUser } = useUserMutations();
 
   const value: AuthContext = useMemo(
     () => ({
       user,
-      loading,
+      isLoading,
       loginWithGoogle,
       logout,
+      updateUser,
       isAuthenticated: !!user,
     }),
-    [loading, loginWithGoogle, logout, user],
+    [isLoading, loginWithGoogle, logout, updateUser, user],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

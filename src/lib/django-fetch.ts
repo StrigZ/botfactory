@@ -1,7 +1,6 @@
 'use server';
 
 import { cookies } from 'next/headers';
-import { cache } from 'react';
 
 import { env } from '~/env';
 
@@ -14,13 +13,17 @@ export async function djangoFetch(
   fetchOptions: RequestInit = {},
 ) {
   const session = await verifySession();
+
   if (!session) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const error: any = new Error('Unauthorized - no valid session');
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    const error = new Error('Unauthorized - no valid session') as Error & {
+      status?: number;
+    };
     error.status = 401;
     throw error;
   }
+
+  let tokens = await getTokens();
+  let cookieHeader = (await cookies()).toString();
 
   const makeRequest = async () =>
     await fetch(`${API_URL}${endpoint}`, {
@@ -28,16 +31,19 @@ export async function djangoFetch(
       headers: {
         'Content-Type': 'application/json',
         ...fetchOptions.headers,
-        Authorization: `Bearer ${(await getTokens()).access}`,
-        Cookie: (await cookies()).toString(),
+        Authorization: `Bearer ${tokens.access}`,
+        Cookie: cookieHeader,
       },
     });
   let res = await makeRequest();
 
   if (res.status === 401) {
     try {
-      const tokens = await refreshTokens();
-      await setTokens(tokens);
+      const refreshedTokens = await refreshTokens();
+
+      await setTokens(refreshedTokens);
+      tokens = refreshedTokens;
+      cookieHeader = (await cookies()).toString();
 
       res = await makeRequest();
     } catch (e) {
@@ -53,21 +59,17 @@ export async function djangoFetch(
   return res;
 }
 
-export const verifySession = cache(async () => {
+export const verifySession = async () => {
   const { refresh } = await getTokens();
 
   return !!refresh;
-});
+};
 
 export async function handleApiRequest<T>(req: () => Promise<T>) {
   try {
     const data = await req();
 
-    if (!data) {
-      return Response.json({});
-    }
-
-    return Response.json(data);
+    return Response.json(data ?? null);
   } catch (e) {
     console.error(e);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access

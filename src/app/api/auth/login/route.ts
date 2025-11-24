@@ -5,12 +5,8 @@ import type { NextRequest } from 'next/server';
 import type { User } from '~/context/AuthContext';
 import { env } from '~/env';
 import { setTokens } from '~/lib/auth';
+import type { LoginWithGoogleInput } from '~/lib/user-api-client';
 import { getTokensFromCookies } from '~/lib/utils';
-
-type AuthProviderData = { token: string };
-type AuthData = { email: string; password: string };
-
-type RequestData = AuthProviderData | AuthData;
 
 type ResponseData = {
   user: User;
@@ -19,19 +15,14 @@ type ResponseData = {
 const API_URL = env.API_URL ?? 'http://localhost:3000';
 
 export async function POST(request: NextRequest) {
-  const requestData = (await request.json()) as RequestData;
-
-  if (!('token' in requestData)) {
-    // email + password login
-    return;
-  }
+  const requestData = (await request.json()) as LoginWithGoogleInput;
 
   const requestOption: RequestInit = {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ token: requestData.token }),
+    body: JSON.stringify({ token: requestData.credentials }),
   };
 
   try {
@@ -56,8 +47,14 @@ export async function POST(request: NextRequest) {
     await setTokens(tokens);
 
     return Response.json({ user: data.user });
-  } catch (e) {
-    console.error(e);
-    throw e;
+  } catch (e: unknown) {
+    console.log(e);
+    const message = e instanceof Error ? e.message : 'Authorization failed!';
+    const status = (e as { status?: number })?.status ?? 500;
+
+    return Response.json(
+      { message },
+      { status, statusText: 'Authorization failed!' },
+    );
   }
 }

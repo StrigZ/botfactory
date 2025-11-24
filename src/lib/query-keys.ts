@@ -14,3 +14,8 @@ export const workflowKeys = {
   detailWithNodes: (id: string) =>
     [...workflowKeys.detailsWithNodes(), id] as const,
 };
+
+export const userKeys = {
+  all: ['user'] as const,
+  me: () => [...userKeys.all, 'me'] as const,
+};

@@ -24,15 +24,19 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '~/components/ui/sidebar';
-import type { User } from '~/context/AuthContext';
 import { useAuth } from '~/hooks/use-auth';
 
-export function NavUser({ user }: { user: User }) {
+import LoadingSpinner from './LoadingSpinner';
+
+export function NavUser() {
   const { isMobile } = useSidebar();
-  const { logout } = useAuth();
+  const { logout, user, isLoading } = useAuth();
+
+  if (isLoading || !user) {
+    return <LoadingSpinner />;
+  }
 
   const fullName = `${user.first_name} ${user.last_name}`;
-
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -93,11 +97,7 @@ export function NavUser({ user }: { user: User }) {
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={async () => {
-                await logout();
-              }}
-            >
+            <DropdownMenuItem onClick={logout}>
               <IconLogout />
               Log out
             </DropdownMenuItem>
