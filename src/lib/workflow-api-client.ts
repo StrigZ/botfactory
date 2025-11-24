@@ -1,4 +1,8 @@
-const API_URL = '/api/workflows';
+'use client';
+
+import { getApiUrl } from './utils';
+
+const ENDPOINT = '/api/workflows';
 
 export type Workflow = {
   id: string;
@@ -44,7 +48,7 @@ class WorkflowApiClient {
   }
 
   async getByIdWithNodes(id: string) {
-    const res = await fetch(`${API_URL}/${id}`);
+    const res = await fetch(getApiUrl(`${ENDPOINT}/${id}`));
     return this.handleResponse<WorkflowWithNodes>(res);
   }
   async update(data: UpdateWorkflowInput) {
@@ -53,7 +57,7 @@ class WorkflowApiClient {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     };
-    const res = await fetch(`${API_URL}/${data.id}`, fetchProps);
+    const res = await fetch(getApiUrl(`${ENDPOINT}/${data.id}`), fetchProps);
     return this.handleResponse<Workflow>(res);
   }
 }
