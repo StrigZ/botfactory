@@ -3,8 +3,12 @@
 import type { ResponseCookie } from 'next/dist/compiled/@edge-runtime/cookies';
 import { cookies } from 'next/headers';
 
+import { env } from '~/env';
+
 import { djangoFetch } from './django-fetch';
-import { getTokensFromCookies } from './utils';
+import { getApiUrl, getTokensFromCookies } from './utils';
+
+const API_URL = env.API_URL;
 
 const ACCESS_TOKEN_NAME = 'access_token';
 const REFRESH_TOKEN_NAME = 'refresh_token';
@@ -46,11 +50,9 @@ export async function setTokens({
 
 export async function logout() {
   try {
-    await djangoFetch('/auth/logout/', {
+    return await djangoFetch('/auth/logout/', {
       method: 'POST',
     });
-  } catch (e) {
-    throw e;
   } finally {
     (await cookies()).set(ACCESS_TOKEN_NAME, '', { expires: new Date(0) });
     (await cookies()).set(REFRESH_TOKEN_NAME, '', { expires: new Date(0) });
@@ -58,19 +60,25 @@ export async function logout() {
 }
 
 export async function refreshTokens() {
-  const res = await djangoFetch(`/auth/jwt/refresh/`, {
+  const { refresh } = await getTokens();
+  return await fetch(getApiUrl('/api/auth/refresh'), {
     method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Cookies: (await cookies()).toString(),
+    },
+    body: JSON.stringify({ refresh }),
   });
 
-  if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Token refresh failed: ${res.statusText} - ${errorText}`);
-  }
+  // if (!res.ok) {
+  //   const errorText = await res.text();
+  //   throw new Error(`Token refresh failed: ${res.statusText} - ${errorText}`);
+  // }
 
-  const resCookies = res.headers.getSetCookie();
+  // const resCookies = res.headers.getSetCookie();
 
-  const tokens = await getTokensFromCookies(resCookies);
-  if (!tokens) throw new Error(`Couldn't find new tokens in response cookies`);
+  // const tokens = await getTokensFromCookies(resCookies);
+  // if (!tokens) throw new Error(`Couldn't find new tokens in response cookies`);
 
-  return tokens;
+  // await setTokens(tokens);
 }

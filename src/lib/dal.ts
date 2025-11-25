@@ -7,20 +7,22 @@ import type { User } from '~/context/AuthContext';
 import type { Bot } from './bot-api-client';
 import { djangoFetch, verifySession } from './django-fetch';
 
-export const getUser = cache(async () => {
-  const session = await verifySession();
-  if (!session) {
-    return null;
-  }
-  const res = await djangoFetch(`/auth/users/me/`);
-  const user = (await res.json()) as User;
+export const fetchUser = cache(async () => {
+  return await djangoFetch(`/auth/users/me/`);
+});
 
-  return user;
+export const getUser = cache(async () => {
+  return (await verifySession())
+    ? ((await fetchUser()).json() as unknown as User)
+    : null;
+});
+
+export const fetchBots = cache(async () => {
+  return await djangoFetch(`/bots/`);
 });
 
 export const getBots = cache(async () => {
-  const res = await djangoFetch(`/bots/`);
-  const bots = (await res.json()) as Bot[];
-
-  return bots;
+  return (await verifySession())
+    ? ((await fetchBots()).json() as unknown as Bot[])
+    : null;
 });

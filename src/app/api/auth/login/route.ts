@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
 
     const data = (await res.json()) as ResponseData;
     const cookies = res.headers.getSetCookie();
-    const tokens = await getTokensFromCookies(cookies);
+    const tokens = getTokensFromCookies(cookies);
 
     if (!tokens) {
       return Response.json(

@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server';
 
 import { env } from '~/env';
 import type { Bot, CreateBotInput } from '~/lib/bot-api-client';
-import { getBots } from '~/lib/dal';
+import { fetchBots } from '~/lib/dal';
 import { handleApiRequest } from '~/lib/django-fetch';
 
 const API_URL = env.API_URL;
@@ -43,5 +43,5 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET() {
-  return await handleApiRequest<Bot[]>(getBots);
+  return await handleApiRequest(fetchBots);
 }

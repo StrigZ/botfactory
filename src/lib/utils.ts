@@ -7,7 +7,7 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export async function getTokensFromCookies(cookies: string[]) {
+export function getTokensFromCookies(cookies: string[]) {
   let access = '';
   let refresh = '';
 

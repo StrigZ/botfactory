@@ -1,9 +1,8 @@
 'use server';
 
-import type { User } from '~/context/AuthContext';
-import { getUser } from '~/lib/dal';
+import { fetchUser } from '~/lib/dal';
 import { handleApiRequest } from '~/lib/django-fetch';
 
 export async function GET() {
-  return await handleApiRequest<User | null>(getUser);
+  return await handleApiRequest(fetchUser);
 }
