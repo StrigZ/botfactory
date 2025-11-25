@@ -1,3 +1,5 @@
+'use client';
+
 import { getApiUrl } from './utils';
 
 const ENDPOINT = '/api/bots';
