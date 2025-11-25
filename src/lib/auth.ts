@@ -45,11 +45,16 @@ export async function setTokens({
 }
 
 export async function logout() {
-  await djangoFetch('/auth/logout/', {
-    method: 'POST',
-  });
-  (await cookies()).set(ACCESS_TOKEN_NAME, '', { expires: new Date(0) });
-  (await cookies()).set(REFRESH_TOKEN_NAME, '', { expires: new Date(0) });
+  try {
+    await djangoFetch('/auth/logout/', {
+      method: 'POST',
+    });
+  } catch (e) {
+    throw e;
+  } finally {
+    (await cookies()).set(ACCESS_TOKEN_NAME, '', { expires: new Date(0) });
+    (await cookies()).set(REFRESH_TOKEN_NAME, '', { expires: new Date(0) });
+  }
 }
 
 export async function refreshTokens() {
