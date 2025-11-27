@@ -1,6 +1,7 @@
 import '@xyflow/react/dist/style.css';
 import { type Metadata } from 'next';
 import { Geist } from 'next/font/google';
+import Script from 'next/script';
 
 import Providers from '~/providers/providers';
 import '~/styles/globals.css';
@@ -23,6 +24,10 @@ export default async function RootLayout({
     <html lang="en" className={`${geist.variable}`} suppressHydrationWarning>
       <body>
         <Providers>{children}</Providers>
+        <Script
+          src="https://accounts.google.com/gsi/client"
+          strategy="beforeInteractive"
+        />
       </body>
     </html>
   );
