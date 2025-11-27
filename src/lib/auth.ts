@@ -61,14 +61,29 @@ export async function logout() {
 
 export async function refreshTokens() {
   const { refresh } = await getTokens();
-  return await fetch(getApiUrl('/api/auth/refresh'), {
+  const res = await fetch(`${API_URL}/auth/jwt/refresh/`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Cookies: (await cookies()).toString(),
     },
     body: JSON.stringify({ refresh }),
   });
+  if (!res.ok) {
+    throw new Error(
+      `Token refresh failed: ${res.statusText} - ${await res.text()}`,
+    );
+  }
+
+  const setCookies = res.headers.getSetCookie();
+  const tokens = getTokensFromCookies(setCookies);
+
+  if (!tokens) {
+    throw new Error(
+      'Tokens were not found in set-cookie header from refresh api.',
+    );
+  }
+
+  return tokens;
 }
 
 export async function appendTokensSetCookiesToResponse({

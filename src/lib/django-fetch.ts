@@ -41,17 +41,7 @@ export async function djangoFetch(
 
   if (res.status === 401) {
     try {
-      const refreshRes = await refreshTokens();
-
-      const tokens = (await refreshRes.json()) as {
-        access: string;
-        refresh: string;
-      };
-      if (!tokens) {
-        throw new Error('Tokens were not found!');
-      }
-
-      const { access, refresh } = tokens;
+      const { access, refresh } = await refreshTokens();
 
       res = await fetch(`${API_URL}${endpoint}`, {
         ...fetchOptions,
