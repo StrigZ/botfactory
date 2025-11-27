@@ -1,11 +1,14 @@
 'use server';
 
 import { cookies } from 'next/headers';
-import { NextResponse } from 'next/server';
 
 import { env } from '~/env';
 
-import { getTokens, refreshTokens } from './auth';
+import {
+  appendTokensSetCookiesToResponse,
+  getTokens,
+  refreshTokens,
+} from './auth';
 
 const API_URL = env.API_URL;
 
@@ -40,7 +43,6 @@ export async function djangoFetch(
     try {
       const refreshRes = await refreshTokens();
 
-      // const setCookies = refreshRes.headers.getSetCookie();
       const tokens = (await refreshRes.json()) as {
         access: string;
         refresh: string;
@@ -63,15 +65,7 @@ export async function djangoFetch(
           }),
         },
       });
-      // res.headers.set('Set-Cookie', setCookies.toString());
-      res.headers.append(
-        'Set-Cookie',
-        `refresh_token=${refresh}; Secure; HttpOnly; SameSite=None; Max-Age=7200; Path=/`,
-      );
-      res.headers.append(
-        'Set-Cookie',
-        `access_token=${access}; Secure; HttpOnly; SameSite=None; Max-Age=25600; Path=/`,
-      );
+      await appendTokensSetCookiesToResponse({ access, refresh, res });
     } catch (e) {
       console.error('Token refresh failed: ', e);
       throw e;
@@ -93,18 +87,6 @@ export const verifySession = async () => {
 
 export async function handleApiRequest(req: () => Promise<Response | void>) {
   try {
-    // const apiResponse = await req();
-    // if (!apiResponse) {
-    //   throw new Error('Internal server error');
-    // }
-
-    // const res = new NextResponse();
-
-    // const setCookie = apiResponse.headers.getSetCookie();
-    // res.headers.set('Set-Cookie', setCookie.toString());
-
-    // const data = (await apiResponse.json()) as T;
-
     return await req();
   } catch (e) {
     console.error(e);

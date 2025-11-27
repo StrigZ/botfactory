@@ -69,16 +69,25 @@ export async function refreshTokens() {
     },
     body: JSON.stringify({ refresh }),
   });
+}
 
-  // if (!res.ok) {
-  //   const errorText = await res.text();
-  //   throw new Error(`Token refresh failed: ${res.statusText} - ${errorText}`);
-  // }
-
-  // const resCookies = res.headers.getSetCookie();
-
-  // const tokens = await getTokensFromCookies(resCookies);
-  // if (!tokens) throw new Error(`Couldn't find new tokens in response cookies`);
-
-  // await setTokens(tokens);
+export async function appendTokensSetCookiesToResponse({
+  access,
+  refresh,
+  res,
+}: {
+  res: Response;
+  access: string;
+  refresh: string;
+}) {
+  const refreshMaxAge = 60 * 60 * 24 * 15;
+  const accessMaxAge = 60 * 60;
+  res.headers.append(
+    'Set-Cookie',
+    `refresh_token=${refresh}; Secure; HttpOnly; SameSite=None; Max-Age=${refreshMaxAge}; Path=/`,
+  );
+  res.headers.append(
+    'Set-Cookie',
+    `access_token=${access}; Secure; HttpOnly; SameSite=None; Max-Age=${accessMaxAge}; Path=/`,
+  );
 }
