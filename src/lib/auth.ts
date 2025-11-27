@@ -1,12 +1,11 @@
 'use server';
 
-import type { ResponseCookie } from 'next/dist/compiled/@edge-runtime/cookies';
 import { cookies } from 'next/headers';
 
 import { env } from '~/env';
 
 import { djangoFetch } from './django-fetch';
-import { getApiUrl, getTokensFromCookies } from './utils';
+import { getTokensFromCookies } from './utils';
 
 const API_URL = env.API_URL;
 
@@ -20,32 +19,6 @@ export async function getTokens() {
     access: cookieStore.get(ACCESS_TOKEN_NAME)?.value,
     refresh: cookieStore.get(REFRESH_TOKEN_NAME)?.value,
   };
-}
-
-export async function setTokens({
-  access,
-  refresh,
-}: {
-  access: string;
-  refresh: string;
-}) {
-  const cookieStore = await cookies();
-  const tokenCookieSettings: Omit<ResponseCookie, 'name' | 'value'> = {
-    httpOnly: true,
-    sameSite: 'none',
-    secure: true,
-    path: '/',
-  };
-
-  cookieStore.set(ACCESS_TOKEN_NAME, access, {
-    ...tokenCookieSettings,
-    maxAge: 60 * 60,
-  });
-
-  cookieStore.set(REFRESH_TOKEN_NAME, refresh, {
-    ...tokenCookieSettings,
-    maxAge: 60 * 60 * 24 * 15,
-  });
 }
 
 export async function logout() {
