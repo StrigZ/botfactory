@@ -23,12 +23,15 @@ export async function getTokens() {
 
 export async function logout() {
   try {
-    return await djangoFetch('/auth/logout/', {
+    await djangoFetch('/auth/logout/', {
       method: 'POST',
+      shouldRefreshTokens: false,
     });
   } finally {
-    (await cookies()).set(ACCESS_TOKEN_NAME, '', { expires: new Date(0) });
-    (await cookies()).set(REFRESH_TOKEN_NAME, '', { expires: new Date(0) });
+    const res = Response.json({ success: true });
+    await appendDeleteTokensThroughSetCookies({ res });
+
+    return res;
   }
 }
 
@@ -72,10 +75,25 @@ export async function appendTokensSetCookiesToResponse({
   const accessMaxAge = 60 * 60;
   res.headers.append(
     'Set-Cookie',
-    `refresh_token=${refresh}; Secure; HttpOnly; SameSite=None; Max-Age=${refreshMaxAge}; Path=/`,
+    `${REFRESH_TOKEN_NAME}=${refresh}; Secure; HttpOnly; SameSite=None; Max-Age=${refreshMaxAge}; Path=/`,
   );
   res.headers.append(
     'Set-Cookie',
-    `access_token=${access}; Secure; HttpOnly; SameSite=None; Max-Age=${accessMaxAge}; Path=/`,
+    `${ACCESS_TOKEN_NAME}=${access}; Secure; HttpOnly; SameSite=None; Max-Age=${accessMaxAge}; Path=/`,
+  );
+}
+
+export async function appendDeleteTokensThroughSetCookies({
+  res,
+}: {
+  res: Response;
+}) {
+  res.headers.append(
+    'Set-Cookie',
+    `${ACCESS_TOKEN_NAME}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`,
+  );
+  res.headers.append(
+    'Set-Cookie',
+    `${REFRESH_TOKEN_NAME}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`,
   );
 }

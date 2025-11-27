@@ -12,14 +12,18 @@ import {
 
 const API_URL = env.API_URL;
 
+type FetchOption = RequestInit & {
+  isProtected?: boolean;
+  shouldRefreshTokens?: boolean;
+};
+
 export async function djangoFetch(
   endpoint: string,
-  fetchOptions: RequestInit & { isProtected?: boolean } = {
-    isProtected: true,
-  },
+  fetchOptions: FetchOption = { shouldRefreshTokens: true, isProtected: true },
 ) {
   const session = await verifySession();
-  const { isProtected } = fetchOptions;
+
+  const { isProtected = true, shouldRefreshTokens = true } = fetchOptions;
 
   if (isProtected && !session) {
     const error = new Error('Unauthorized - no valid session') as Error & {
@@ -33,13 +37,13 @@ export async function djangoFetch(
     ...fetchOptions,
     headers: {
       'Content-Type': 'application/json',
-      ...fetchOptions.headers,
       Authorization: `Bearer ${(await getTokens()).access}`,
       Cookie: (await cookies()).toString(),
+      ...fetchOptions.headers,
     },
   });
-
-  if (res.status === 401) {
+  if (res.status === 401 && shouldRefreshTokens) {
+    console.log('Refreshing tokens...');
     try {
       const { access, refresh } = await refreshTokens();
 
