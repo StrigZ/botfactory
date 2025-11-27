@@ -23,7 +23,7 @@ export function useUserMutations() {
       await queryClient.setQueryData(userKeys.me(), data);
 
       toast.success('Successfully logged in');
-      router.push(`/dashboard`);
+      router.replace(`/dashboard`);
     },
     onError: ({ message }) => toast.error(message),
   });
@@ -43,7 +43,7 @@ export function useUserMutations() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: userKeys.all });
       toast.success('Successfully logged out');
-      router.push(`/login`);
+      router.replace(`/login`);
     },
     onError: ({ message }) => toast.error(message),
   });
