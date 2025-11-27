@@ -4,7 +4,7 @@ import { cookies } from 'next/headers';
 
 import { env } from '~/env';
 
-import { djangoFetch } from './django-fetch';
+import { djangoFetch, verifySession } from './django-fetch';
 import { getTokensFromCookies } from './utils';
 
 const API_URL = env.API_URL;
@@ -33,6 +33,12 @@ export async function logout() {
 
     return res;
   }
+}
+
+export async function getMe() {
+  return (await verifySession())
+    ? await djangoFetch(`/auth/users/me/`)
+    : Response.json(null);
 }
 
 export async function refreshTokens() {

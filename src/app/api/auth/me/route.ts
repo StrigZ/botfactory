@@ -1,8 +1,7 @@
 'use server';
 
-import { fetchUser } from '~/lib/dal';
-import { handleApiRequest } from '~/lib/django-fetch';
+import { getMe } from '~/lib/auth';
 
 export async function GET() {
-  return await handleApiRequest(fetchUser);
+  return await getMe();
 }

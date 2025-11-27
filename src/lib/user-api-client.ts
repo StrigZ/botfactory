@@ -24,7 +24,7 @@ class UserApiClient {
 
   async getMe() {
     const res = await fetch(getApiUrl(`${ENDPOINT}/me`));
-    return this.handleResponse<User>(res);
+    return this.handleResponse<User | null>(res);
   }
   async loginWithGoogle(credential: LoginWithGoogleInput) {
     const fetchProps: RequestInit = {
