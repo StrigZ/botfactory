@@ -14,8 +14,12 @@ import Workflow from './Workflow/Workflow';
 
 type Props = { botId: string };
 function BotDetailsPage({ botId }: Props) {
-  const { data: botData } = useBot({ id: botId });
+  const { data: botData, isLoading: isBotLoading } = useBot({ id: botId });
   const { data: workflow } = useWorkflowWithNodes({ id: botId });
+
+  if (isBotLoading || !botData) {
+    return <LoadingSpinner />;
+  }
 
   return (
     <div className="flex h-full overflow-hidden p-0">
