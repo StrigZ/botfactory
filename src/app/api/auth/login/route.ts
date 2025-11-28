@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const res = NextResponse.json({ user });
+    const res = NextResponse.json(user);
     await appendTokensSetCookiesToResponse({ res, ...tokens });
 
     return res;
