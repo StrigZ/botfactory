@@ -1,10 +1,13 @@
 'use server';
 
 import { cookies } from 'next/headers';
+import { type NextRequest, NextResponse } from 'next/server';
 
+import type { User } from '~/context/AuthContext';
 import { env } from '~/env';
 
 import { djangoFetch, verifySession } from './django-fetch';
+import type { LoginWithGoogleInput } from './user-api-client';
 import { getTokensFromCookies } from './utils';
 
 const API_URL = env.API_URL;
@@ -19,6 +22,35 @@ export async function getTokens() {
     access: cookieStore.get(ACCESS_TOKEN_NAME)?.value,
     refresh: cookieStore.get(REFRESH_TOKEN_NAME)?.value,
   };
+}
+
+export async function login(req: NextRequest): Promise<Response> {
+  const reqBody = (await req.json()) as LoginWithGoogleInput;
+
+  const apiResponse = await djangoFetch('/accounts/google/', {
+    shouldRefreshTokens: false,
+    isProtected: false,
+    method: 'POST',
+    body: JSON.stringify({ token: reqBody.credentials }),
+  });
+
+  const { user } = (await apiResponse.json()) as {
+    user: User;
+  };
+  const setCookie = apiResponse.headers.getSetCookie();
+  const tokens = getTokensFromCookies(setCookie);
+
+  if (!tokens) {
+    return Response.json(null, {
+      status: 500,
+      statusText: 'Internal Sever Error',
+    });
+  }
+
+  const res = NextResponse.json(user);
+  await appendTokensSetCookiesToResponse({ res, ...tokens });
+
+  return res;
 }
 
 export async function logout() {
