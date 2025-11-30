@@ -1,7 +1,9 @@
-import BotDetailsPage from '~/components/BotPage/BotDetailsPage';
-import { botOptions } from '~/lib/bot-query-options';
+import { HydrationBoundary, dehydrate } from '@tanstack/react-query';
+
+import { BotDetailsPage } from '~/components/BotPage/BotDetailsPage';
+import { djangoFetch } from '~/lib/django-fetch';
 import { getQueryClient } from '~/lib/query-client';
-import { workflowOptions } from '~/lib/workflow-query-options';
+import { botKeys, workflowKeys } from '~/lib/query-keys';
 
 export default async function Page({
   params,
@@ -11,8 +13,24 @@ export default async function Page({
   const queryClient = getQueryClient();
   const { botId } = await params;
 
-  await queryClient.prefetchQuery(botOptions({ id: botId }));
-  await queryClient.prefetchQuery(workflowOptions({ id: botId }));
+  await queryClient.prefetchQuery({
+    queryKey: botKeys.detail(botId),
+    queryFn: () =>
+      djangoFetch(`/bots/${botId}/`, { shouldRefreshTokens: false }).then(
+        (res) => res.json(),
+      ),
+  });
+  await queryClient.prefetchQuery({
+    queryKey: workflowKeys.detailWithNodes(botId),
+    queryFn: () =>
+      djangoFetch(`/workflows/bot/${botId}/full/`, {
+        shouldRefreshTokens: false,
+      }).then((res) => res.json()),
+  });
 
-  return <BotDetailsPage botId={botId} />;
+  return (
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <BotDetailsPage botId={botId} />
+    </HydrationBoundary>
+  );
 }

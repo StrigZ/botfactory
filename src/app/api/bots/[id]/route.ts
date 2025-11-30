@@ -1,10 +1,6 @@
-import { cookies } from 'next/headers';
 import type { NextRequest } from 'next/server';
 
-import { env } from '~/env';
-import type { Bot, UpdateBotInput } from '~/lib/bot-api-client';
-
-const API_URL = env.API_URL;
+import { djangoFetch } from '~/lib/django-fetch';
 
 export async function GET(
   _: NextRequest,
@@ -13,33 +9,7 @@ export async function GET(
   // eslint-disable-next-line @typescript-eslint/await-thenable
   const { id } = await params;
 
-  const requestOption: RequestInit = {
-    headers: {
-      'Content-Type': 'application/json',
-      Cookie: (await cookies()).toString(),
-      credentials: 'include',
-    },
-  };
-
-  try {
-    const res = await fetch(`${API_URL}/bots/${id}/`, requestOption);
-
-    if (!res.ok) {
-      throw new Error('Error during /api/bots/id api call: ' + res.statusText);
-    }
-
-    const data = (await res.json()) as Bot;
-
-    return Response.json(data);
-  } catch (e) {
-    console.error(e);
-    return Response.json(
-      {
-        message: 'Unexpected error occurred during bot fetching.',
-      },
-      { status: 500 },
-    );
-  }
+  return await djangoFetch(`/bots/${id}/`);
 }
 
 export async function PATCH(
@@ -48,37 +18,11 @@ export async function PATCH(
 ) {
   // eslint-disable-next-line @typescript-eslint/await-thenable
   const { id } = await params;
-  const requestData = (await request.json()) as UpdateBotInput;
-  const requestOption: RequestInit = {
+
+  return await djangoFetch(`/bots/${id}/`, {
     method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-
-      Cookie: (await cookies()).toString(),
-      credentials: 'include',
-    },
-    body: JSON.stringify(requestData),
-  };
-
-  try {
-    const res = await fetch(`${API_URL}/bots/${id}/`, requestOption);
-
-    if (!res.ok) {
-      throw new Error('Error during /api/bots/id api call: ' + res.statusText);
-    }
-
-    const data = (await res.json()) as Bot;
-
-    return Response.json(data);
-  } catch (e) {
-    console.error(e);
-    return Response.json(
-      {
-        message: 'Unexpected error occurred during bot updating.',
-      },
-      { status: 500 },
-    );
-  }
+    body: JSON.stringify(await request.json()),
+  });
 }
 
 export async function DELETE(
@@ -87,31 +31,6 @@ export async function DELETE(
 ) {
   // eslint-disable-next-line @typescript-eslint/await-thenable
   const { id } = await params;
-  const requestOption: RequestInit = {
-    method: 'DELETE',
-    headers: {
-      'Content-Type': 'application/json',
 
-      Cookie: (await cookies()).toString(),
-      credentials: 'include',
-    },
-  };
-
-  try {
-    const res = await fetch(`${API_URL}/bots/${id}/`, requestOption);
-
-    if (!res.ok) {
-      throw new Error('Error during /api/bots/id api call: ' + res.statusText);
-    }
-
-    return Response.json({ status: 200 });
-  } catch (e) {
-    console.error(e);
-    return Response.json(
-      {
-        message: 'Unexpected error occurred during bot deletion.',
-      },
-      { status: 500 },
-    );
-  }
+  return await djangoFetch(`/bots/${id}/`, { method: 'DELETE' });
 }

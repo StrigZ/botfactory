@@ -1,5 +1,8 @@
-const API_URL = '/api/bots';
+'use client';
 
+import { getApiUrl } from './utils';
+
+const ENDPOINT = '/api/bots';
 export type Bot = {
   id: string;
   owner_id: string;
@@ -53,11 +56,11 @@ class BotApiClient {
   }
 
   async getAll() {
-    const res = await fetch(`${API_URL}`);
+    const res = await fetch(getApiUrl(ENDPOINT));
     return this.handleResponse<GetAllResponse>(res);
   }
   async getById(id: string) {
-    const res = await fetch(`${API_URL}/${id}`);
+    const res = await fetch(getApiUrl(`${ENDPOINT}/${id}`));
     return this.handleResponse<Bot>(res);
   }
   async create({ name, token }: CreateBotInput) {
@@ -66,7 +69,7 @@ class BotApiClient {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, token }),
     };
-    const res = await fetch(`${API_URL}`, fetchProps);
+    const res = await fetch(getApiUrl(ENDPOINT), fetchProps);
     return this.handleResponse<Bot>(res);
   }
   async update({ id, data: { token, name } }: UpdateBotInput) {
@@ -75,14 +78,14 @@ class BotApiClient {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, token }),
     };
-    const res = await fetch(`${API_URL}/${id}`, fetchProps);
+    const res = await fetch(getApiUrl(`${ENDPOINT}/${id}`), fetchProps);
     return this.handleResponse<Bot>(res);
   }
   async delete({ id }: DeleteBotInput) {
     const fetchProps: RequestInit = {
       method: 'DELETE',
     };
-    const res = await fetch(`${API_URL}/${id}`, fetchProps);
+    const res = await fetch(getApiUrl(`${ENDPOINT}/${id}`), fetchProps);
     return this.handleResponse<{ success: boolean }>(res);
   }
   async deploy({ id }: DeployBotInput) {
@@ -90,7 +93,7 @@ class BotApiClient {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
     };
-    const res = await fetch(`${API_URL}/${id}/deploy`, fetchProps);
+    const res = await fetch(getApiUrl(`${ENDPOINT}/${id}/deploy`), fetchProps);
     return this.handleResponse<{ success: boolean }>(res);
   }
   async pause({ id }: PauseBotInput) {
@@ -98,7 +101,7 @@ class BotApiClient {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
     };
-    const res = await fetch(`${API_URL}/${id}/pause`, fetchProps);
+    const res = await fetch(getApiUrl(`${ENDPOINT}/${id}/pause`), fetchProps);
     return this.handleResponse<{ success: boolean }>(res);
   }
 }

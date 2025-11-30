@@ -1,10 +1,8 @@
 'use client';
 
-import { withAuth } from '~/hooks/use-auth';
-
 import CreateBotForm from '../CreateBotForm';
 
-function BotCreatePage() {
+export function BotCreatePage() {
   return (
     <div className="flex h-full overflow-hidden p-0">
       <div className="min-w-xs p-8">
@@ -20,5 +18,3 @@ function BotCreatePage() {
     </div>
   );
 }
-
-export default withAuth(BotCreatePage);

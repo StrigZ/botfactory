@@ -1,7 +1,6 @@
-import { cookies } from 'next/headers';
 import { type NextRequest, NextResponse } from 'next/server';
 
-import { getTokens, refreshToken } from './lib/auth';
+import { verifySession } from './lib/django-fetch';
 
 const protectedRoutes = ['/dashboard'];
 const publicRoutes = ['/login', '/signup', '/'];
@@ -11,20 +10,15 @@ export default async function middleware(req: NextRequest) {
   const isProtectedRoute = protectedRoutes.includes(path);
   const isPublicRoute = publicRoutes.includes(path);
 
-  const { access, refresh } = await getTokens();
-  if (!access && refresh) {
-    await refreshToken();
-  }
+  const session = await verifySession();
 
-  const newAccess = access ?? (await getTokens()).access;
-
-  if (isProtectedRoute && !newAccess) {
+  if (isProtectedRoute && !session) {
     return NextResponse.redirect(new URL('/login', req.nextUrl));
   }
 
   if (
     isPublicRoute &&
-    newAccess &&
+    session &&
     !req.nextUrl.pathname.startsWith('/dashboard')
   ) {
     return NextResponse.redirect(new URL('/dashboard', req.nextUrl));

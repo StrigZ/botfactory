@@ -1,9 +1,16 @@
 'use server';
 
-import type { ResponseCookie } from 'next/dist/compiled/@edge-runtime/cookies';
 import { cookies } from 'next/headers';
+import { type NextRequest, NextResponse } from 'next/server';
 
+import type { User } from '~/context/AuthContext';
 import { env } from '~/env';
+
+import { djangoFetch, verifySession } from './django-fetch';
+import type { LoginWithGoogleInput } from './user-api-client';
+import { getTokensFromCookies } from './utils';
+
+const API_URL = env.API_URL;
 
 const ACCESS_TOKEN_NAME = 'access_token';
 const REFRESH_TOKEN_NAME = 'refresh_token';
@@ -17,79 +24,114 @@ export async function getTokens() {
   };
 }
 
-export async function saveTokensFromCookie(cookies: string[]) {
-  let accessToken: string | undefined = undefined;
-  let refreshToken: string | undefined = undefined;
+export async function login(req: NextRequest): Promise<Response> {
+  const reqBody = (await req.json()) as LoginWithGoogleInput;
 
-  cookies.forEach((cookie) => {
-    const accessMatch = /(?:access_token|access)=([^;]+)/.exec(cookie);
-    if (accessMatch) {
-      accessToken = accessMatch[1];
-    }
-
-    const refreshMatch = /(?:refresh_token|refresh)=([^;]+)/.exec(cookie);
-    if (refreshMatch) {
-      refreshToken = refreshMatch[1];
-    }
+  const apiResponse = await djangoFetch('/accounts/google/', {
+    shouldRefreshTokens: false,
+    isProtected: false,
+    method: 'POST',
+    body: JSON.stringify({ token: reqBody.credentials }),
   });
 
-  if (!accessToken || !refreshToken) {
-    throw new Error('Tokens not found in cookies');
-  }
-
-  await setTokens({ access: accessToken, refresh: refreshToken });
-}
-
-export async function setTokens({
-  access,
-  refresh,
-}: {
-  access?: string;
-  refresh?: string;
-}) {
-  const cookieStore = await cookies();
-  const tokenCookieSettings: Omit<ResponseCookie, 'name' | 'value'> = {
-    httpOnly: true,
-    sameSite: 'none',
-    secure: true,
-    path: '/',
+  const { user } = (await apiResponse.json()) as {
+    user: User;
   };
+  const setCookie = apiResponse.headers.getSetCookie();
+  const tokens = getTokensFromCookies(setCookie);
 
-  if (access) {
-    cookieStore.set(ACCESS_TOKEN_NAME, access, {
-      ...tokenCookieSettings,
-      maxAge: 60 * 60,
+  if (!tokens) {
+    return Response.json(null, {
+      status: 500,
+      statusText: 'Internal Sever Error',
     });
   }
 
-  if (refresh) {
-    cookieStore.set(REFRESH_TOKEN_NAME, refresh, {
-      ...tokenCookieSettings,
-      maxAge: 60 * 60 * 24 * 15,
+  const res = NextResponse.json(user);
+  await appendTokensSetCookiesToHeaders({ headers: res.headers, ...tokens });
+
+  return res;
+}
+
+export async function logout() {
+  try {
+    await djangoFetch('/auth/logout/', {
+      method: 'POST',
+      shouldRefreshTokens: false,
     });
+  } finally {
+    const res = Response.json({ success: true });
+    await appendDeleteTokensThroughSetCookies({ res });
+
+    return res;
   }
 }
 
-export async function deleteTokens() {
-  (await cookies()).set(ACCESS_TOKEN_NAME, '', { expires: new Date(0) });
-  (await cookies()).set(REFRESH_TOKEN_NAME, '', { expires: new Date(0) });
+export async function getMe() {
+  return (await verifySession())
+    ? await djangoFetch(`/auth/users/me/`)
+    : Response.json(null);
 }
 
-export async function refreshToken() {
-  const res = await fetch(`${env.API_URL}/auth/jwt/refresh/`, {
+export async function refreshTokens() {
+  const { refresh } = await getTokens();
+  const res = await fetch(`${API_URL}/auth/jwt/refresh/`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Cookie: (await cookies()).toString(),
     },
-    credentials: 'include',
+    body: JSON.stringify({ refresh }),
   });
   if (!res.ok) {
-    console.error(await res.text());
     throw new Error(
-      'Error during token refreshing api call: ' + res.statusText,
+      `Token refresh failed: ${res.statusText} - ${await res.text()}`,
     );
   }
-  const resCookies = res.headers.getSetCookie();
-  await saveTokensFromCookie(resCookies);
+
+  const setCookies = res.headers.getSetCookie();
+  const tokens = getTokensFromCookies(setCookies);
+
+  if (!tokens) {
+    throw new Error(
+      'Tokens were not found in set-cookie header from refresh api.',
+    );
+  }
+
+  return tokens;
+}
+
+export async function appendTokensSetCookiesToHeaders({
+  access,
+  refresh,
+  headers,
+}: {
+  headers: Headers;
+  access: string;
+  refresh: string;
+}) {
+  const refreshMaxAge = 60 * 60 * 24 * 15;
+  const accessMaxAge = 60 * 60;
+  headers.append(
+    'Set-Cookie',
+    `${REFRESH_TOKEN_NAME}=${refresh}; Secure; HttpOnly; SameSite=None; Max-Age=${refreshMaxAge}; Path=/`,
+  );
+  headers.append(
+    'Set-Cookie',
+    `${ACCESS_TOKEN_NAME}=${access}; Secure; HttpOnly; SameSite=None; Max-Age=${accessMaxAge}; Path=/`,
+  );
+}
+
+export async function appendDeleteTokensThroughSetCookies({
+  res,
+}: {
+  res: Response;
+}) {
+  res.headers.append(
+    'Set-Cookie',
+    `${ACCESS_TOKEN_NAME}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`,
+  );
+  res.headers.append(
+    'Set-Cookie',
+    `${REFRESH_TOKEN_NAME}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`,
+  );
 }
