@@ -48,7 +48,7 @@ export async function login(req: NextRequest): Promise<Response> {
   }
 
   const res = NextResponse.json(user);
-  await appendTokensSetCookiesToResponse({ res, ...tokens });
+  await appendTokensSetCookiesToHeaders({ headers: res.headers, ...tokens });
 
   return res;
 }
@@ -100,22 +100,22 @@ export async function refreshTokens() {
   return tokens;
 }
 
-export async function appendTokensSetCookiesToResponse({
+export async function appendTokensSetCookiesToHeaders({
   access,
   refresh,
-  res,
+  headers,
 }: {
-  res: Response;
+  headers: Headers;
   access: string;
   refresh: string;
 }) {
   const refreshMaxAge = 60 * 60 * 24 * 15;
   const accessMaxAge = 60 * 60;
-  res.headers.append(
+  headers.append(
     'Set-Cookie',
     `${REFRESH_TOKEN_NAME}=${refresh}; Secure; HttpOnly; SameSite=None; Max-Age=${refreshMaxAge}; Path=/`,
   );
-  res.headers.append(
+  headers.append(
     'Set-Cookie',
     `${ACCESS_TOKEN_NAME}=${access}; Secure; HttpOnly; SameSite=None; Max-Age=${accessMaxAge}; Path=/`,
   );

@@ -5,7 +5,7 @@ import { cookies } from 'next/headers';
 import { env } from '~/env';
 
 import {
-  appendTokensSetCookiesToResponse,
+  appendTokensSetCookiesToHeaders,
   getTokens,
   refreshTokens,
 } from './auth';
@@ -21,6 +21,9 @@ export async function djangoFetch(
   endpoint: string,
   fetchOptions: FetchOption = { shouldRefreshTokens: true, isProtected: true },
 ) {
+  let isRetried = false;
+  let newAccess = null;
+  let newRefresh = null;
   const session = await verifySession();
 
   const { isProtected = true, shouldRefreshTokens = true } = fetchOptions;
@@ -46,6 +49,7 @@ export async function djangoFetch(
     console.log('Refreshing tokens...');
     try {
       const { access, refresh } = await refreshTokens();
+      [newAccess, newRefresh] = [access, refresh];
 
       res = await fetch(`${API_URL}${endpoint}`, {
         ...fetchOptions,
@@ -59,7 +63,7 @@ export async function djangoFetch(
           }),
         },
       });
-      await appendTokensSetCookiesToResponse({ access, refresh, res });
+      isRetried = true;
     } catch (e) {
       console.error('Token refresh failed: ', e);
       throw e;
@@ -70,7 +74,23 @@ export async function djangoFetch(
     );
   }
 
-  return res;
+  const headers = new Headers(res.headers);
+
+  if (isRetried && newAccess && newRefresh) {
+    await appendTokensSetCookiesToHeaders({
+      access: newAccess,
+      refresh: newRefresh,
+      headers,
+    });
+  }
+
+  const newRes = Response.json(await res.json(), {
+    status: res.status,
+    statusText: res.statusText,
+    headers,
+  });
+
+  return newRes;
 }
 
 export const verifySession = async () => {
