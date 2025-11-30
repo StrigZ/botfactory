@@ -24,7 +24,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '~/components/ui/sidebar';
-import { useAuth } from '~/hooks/use-auth';
+import { useAuth } from '~/context/AuthContext';
 
 import LoadingSpinner from './LoadingSpinner';
 

@@ -3,8 +3,8 @@
 import { type CredentialResponse } from 'google-one-tap';
 import { useEffect, useState } from 'react';
 
+import { useAuth } from '~/context/AuthContext';
 import { env } from '~/env';
-import { useAuth } from '~/hooks/use-auth';
 
 export default function LoginPage() {
   const [error, setError] = useState('');

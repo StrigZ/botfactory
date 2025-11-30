@@ -1,7 +1,7 @@
 import Link from 'next/link';
 
 import { buttonVariants } from '~/components/ui/button';
-import { useAuth } from '~/hooks/use-auth';
+import { useAuth } from '~/context/AuthContext';
 
 export default function AuthButton() {
   const { isAuthenticated } = useAuth();

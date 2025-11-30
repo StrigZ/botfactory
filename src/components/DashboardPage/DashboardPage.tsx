@@ -3,14 +3,13 @@
 import { Plus } from 'lucide-react';
 import Link from 'next/link';
 
-import { withAuth } from '~/hooks/use-auth';
 import { useBots } from '~/hooks/use-bots';
 
 import Summary from '../Summary';
 import { buttonVariants } from '../ui/button';
 import BotTable from './BotTable/BotTable';
 
-function DashboardPage() {
+export function DashboardPage() {
   const { data } = useBots();
 
   return (
@@ -42,5 +41,3 @@ function DashboardPage() {
     </div>
   );
 }
-
-export default withAuth(DashboardPage);

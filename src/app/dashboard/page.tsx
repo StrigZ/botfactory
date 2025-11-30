@@ -1,7 +1,7 @@
 import { HydrationBoundary, dehydrate } from '@tanstack/react-query';
 import { redirect } from 'next/navigation';
 
-import DashboardPage from '~/components/DashboardPage/DashboardPage';
+import { DashboardPage } from '~/components/DashboardPage/DashboardPage';
 import { djangoFetch, verifySession } from '~/lib/django-fetch';
 import { getQueryClient } from '~/lib/query-client';
 import { botKeys, userKeys } from '~/lib/query-keys';

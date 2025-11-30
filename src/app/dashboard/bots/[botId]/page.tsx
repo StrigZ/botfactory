@@ -1,4 +1,4 @@
-import BotDetailsPage from '~/components/BotPage/BotDetailsPage';
+import { BotDetailsPage } from '~/components/BotPage/BotDetailsPage';
 import { botOptions } from '~/lib/bot-query-options';
 import { getQueryClient } from '~/lib/query-client';
 import { workflowOptions } from '~/lib/workflow-query-options';

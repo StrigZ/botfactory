@@ -1,6 +1,6 @@
 'use client';
 
-import { type ReactNode, createContext, useMemo } from 'react';
+import { type ReactNode, createContext, useContext, useMemo } from 'react';
 
 import { useUser } from '~/hooks/use-user';
 import { useUserMutations } from '~/hooks/use-user-mutations';
@@ -45,6 +45,8 @@ type AuthProviderProps = {
   initialUser?: User | null;
   children: ReactNode;
 };
+
+export const useAuth = () => useContext(AuthContext);
 
 export function AuthProvider({ initialUser, children }: AuthProviderProps) {
   const { data: user, isLoading } = useUser({ initialUser });

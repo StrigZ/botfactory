@@ -4,7 +4,6 @@ import { Suspense } from 'react';
 
 import DnDContextProvider from '~/context/DnDContext';
 import ReactFlowContextProvider from '~/context/ReactFlowContext';
-import { withAuth } from '~/hooks/use-auth';
 import { useBot } from '~/hooks/use-bots';
 import { useWorkflowWithNodes } from '~/hooks/use-workflows';
 
@@ -13,7 +12,7 @@ import SingleFieldFormWrapper from '../SingleFieldFormWrapper';
 import Workflow from './Workflow/Workflow';
 
 type Props = { botId: string };
-function BotDetailsPage({ botId }: Props) {
+export function BotDetailsPage({ botId }: Props) {
   const { data: botData, isLoading: isBotLoading } = useBot({ id: botId });
   const { data: workflow } = useWorkflowWithNodes({ id: botId });
 
@@ -48,5 +47,3 @@ function BotDetailsPage({ botId }: Props) {
     </div>
   );
 }
-
-export default withAuth(BotDetailsPage);
