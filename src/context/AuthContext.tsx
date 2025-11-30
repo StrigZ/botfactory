@@ -21,6 +21,7 @@ type AuthContext = {
   user: User | null | undefined;
   isLoading: boolean;
   isAuthenticated: boolean;
+  isUserQueryFinished: boolean;
   loginWithGoogle: (credentials: LoginWithGoogleInput) => void;
   logout: () => void;
   updateUser: (data: UpdateUserInput) => void;
@@ -30,6 +31,7 @@ export const AuthContext = createContext<AuthContext>({
   user: null,
   isLoading: false,
   isAuthenticated: false,
+  isUserQueryFinished: false,
   loginWithGoogle(_credentials) {
     //
   },
@@ -42,14 +44,13 @@ export const AuthContext = createContext<AuthContext>({
 });
 
 type AuthProviderProps = {
-  initialUser?: User | null;
   children: ReactNode;
 };
 
 export const useAuth = () => useContext(AuthContext);
 
-export function AuthProvider({ initialUser, children }: AuthProviderProps) {
-  const { data: user, isLoading } = useUser({ initialUser });
+export function AuthProvider({ children }: AuthProviderProps) {
+  const { data: user, isLoading, isSuccess } = useUser();
   const { loginWithGoogle, logout, updateUser } = useUserMutations();
 
   const value: AuthContext = useMemo(
@@ -60,8 +61,9 @@ export function AuthProvider({ initialUser, children }: AuthProviderProps) {
       logout,
       updateUser,
       isAuthenticated: !!user,
+      isUserQueryFinished: isSuccess,
     }),
-    [isLoading, loginWithGoogle, logout, updateUser, user],
+    [isLoading, isSuccess, loginWithGoogle, logout, updateUser, user],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

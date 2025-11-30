@@ -13,17 +13,20 @@ export default async function Page({
   const queryClient = getQueryClient();
   const { botId } = await params;
 
-  await Promise.all([
-    await queryClient.prefetchQuery({
-      queryKey: botKeys.detail(botId),
-      queryFn: () => djangoFetch(`/bots/${botId}/`).then((res) => res.json()),
-    }),
-    await queryClient.prefetchQuery({
-      queryKey: workflowKeys.detailWithNodes(botId),
-      queryFn: () =>
-        djangoFetch(`/workflows/bot/${botId}/full/`).then((res) => res.json()),
-    }),
-  ]);
+  await queryClient.prefetchQuery({
+    queryKey: botKeys.detail(botId),
+    queryFn: () =>
+      djangoFetch(`/bots/${botId}/`, { shouldRefreshTokens: false }).then(
+        (res) => res.json(),
+      ),
+  });
+  await queryClient.prefetchQuery({
+    queryKey: workflowKeys.detailWithNodes(botId),
+    queryFn: () =>
+      djangoFetch(`/workflows/bot/${botId}/full/`, {
+        shouldRefreshTokens: false,
+      }).then((res) => res.json()),
+  });
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>

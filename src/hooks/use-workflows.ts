@@ -1,9 +1,9 @@
 'use client';
 
-import { useSuspenseQuery } from '@tanstack/react-query';
-
 import { workflowOptions } from '~/lib/workflow-query-options';
 
+import { useAuthenticatedQuery } from './use-authenticated-query';
+
 export function useWorkflowWithNodes({ id }: { id: string }) {
-  return useSuspenseQuery(workflowOptions({ id }));
+  return useAuthenticatedQuery(workflowOptions({ id }));
 }
