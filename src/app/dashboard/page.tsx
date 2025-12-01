@@ -13,20 +13,22 @@ export default async function Page() {
   }
 
   const queryClient = getQueryClient();
-  await queryClient.prefetchQuery({
-    queryKey: userKeys.me(),
-    queryFn: () =>
-      djangoFetch('/auth/users/me/', { shouldRefreshTokens: false }).then(
-        (res) => res.json(),
-      ),
-  });
-  await queryClient.prefetchQuery({
-    queryKey: botKeys.lists(),
-    queryFn: () =>
-      djangoFetch('/bots/', { shouldRefreshTokens: false }).then((res) =>
-        res.json(),
-      ),
-  });
+  await Promise.all([
+    queryClient.prefetchQuery({
+      queryKey: userKeys.me(),
+      queryFn: () =>
+        djangoFetch('/auth/users/me/', { shouldRefreshTokens: false }).then(
+          (res) => res.json(),
+        ),
+    }),
+    queryClient.prefetchQuery({
+      queryKey: botKeys.lists(),
+      queryFn: () =>
+        djangoFetch('/bots/', { shouldRefreshTokens: false }).then((res) =>
+          res.json(),
+        ),
+    }),
+  ]);
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
